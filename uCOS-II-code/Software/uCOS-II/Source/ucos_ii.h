@@ -72,10 +72,10 @@ extern "C" {
 
 #define  OS_PRIO_SELF                0xFFu              /* Indicate SELF priority                      */
 
-#if OS_TASK_STAT_EN > 0u
-#define  OS_N_SYS_TASKS                 2u              /* Number of system tasks                      */
+#if OS_TASK_STAT_EN > 0u								/*有没有统计任务*/
+#define  OS_N_SYS_TASKS                 2u              /*系统任务数*/
 #else
-#define  OS_N_SYS_TASKS                 1u
+#define  OS_N_SYS_TASKS                 1u				/*系统任务数*/
 #endif
 
 #define  OS_TASK_STAT_PRIO  (OS_LOWEST_PRIO - 1u)       /* Statistic task priority                     */
@@ -244,7 +244,7 @@ extern "C" {
 *                                             ERROR CODES
 *********************************************************************************************************
 */
-#define OS_ERR_NONE                     0u
+#define OS_ERR_NONE                     0u/*调用成功*/
 
 #define OS_ERR_EVENT_TYPE               1u
 #define OS_ERR_PEND_ISR                 2u
@@ -285,7 +285,7 @@ extern "C" {
 #define OS_ERR_TASK_DEL_REQ            63u
 #define OS_ERR_TASK_DEL_ISR            64u
 #define OS_ERR_TASK_NAME_TOO_LONG      65u
-#define OS_ERR_TASK_NO_MORE_TCB        66u
+#define OS_ERR_TASK_NO_MORE_TCB        66u/*没有空闲的任务控制块*/
 #define OS_ERR_TASK_NOT_EXIST          67u
 #define OS_ERR_TASK_NOT_SUSPENDED      68u
 #define OS_ERR_TASK_OPT                69u
@@ -653,7 +653,7 @@ OS_EXT  INT8U             OSCPUUsage;               /* Percentage of CPU used   
 OS_EXT  INT32U            OSIdleCtrMax;             /* Max. value that idle ctr can take in 1 sec.     */
 OS_EXT  INT32U            OSIdleCtrRun;             /* Val. reached by idle ctr at run time in 1 sec.  */
 OS_EXT  BOOLEAN           OSStatRdy;                /* Flag indicating that the statistic task is rdy  */
-OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /* Statistics task stack          */
+OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /*统计任务栈*//* Statistics task stack          */
 #endif
 
 OS_EXT  INT8U             OSIntNesting;             /* Interrupt nesting level                         */
@@ -663,8 +663,8 @@ OS_EXT  INT8U             OSLockNesting;            /* Multitasking lock nesting
 OS_EXT  INT8U             OSPrioCur;                /* Priority of current task                        */
 OS_EXT  INT8U             OSPrioHighRdy;            /* Priority of highest priority task               */
 
-OS_EXT  OS_PRIO           OSRdyGrp;                        /* Ready list group                         */
-OS_EXT  OS_PRIO           OSRdyTbl[OS_RDY_TBL_SIZE];       /* Table of tasks which are ready to run    */
+OS_EXT  OS_PRIO           OSRdyGrp;                        /*任务就绪组*/
+OS_EXT  OS_PRIO           OSRdyTbl[OS_RDY_TBL_SIZE];       /*任务就绪表*/
 
 OS_EXT  BOOLEAN           OSRunning;                       /* Flag indicating that kernel is running   */
 
@@ -676,15 +676,14 @@ OS_EXT  volatile  INT32U  OSIdleCtr;                                 /* Idle cou
 OS_EXT  BOOLEAN           OSSafetyCriticalStartFlag;
 #endif
 
-OS_EXT  OS_STK            OSTaskIdleStk[OS_TASK_IDLE_STK_SIZE];      /* Idle task stack                */
+OS_EXT  OS_STK            OSTaskIdleStk[OS_TASK_IDLE_STK_SIZE];      	/*空闲任务栈*/
 
-
-OS_EXT  OS_TCB           *OSTCBCur;                        /* Pointer to currently running TCB         */
-OS_EXT  OS_TCB           *OSTCBFreeList;                   /* Pointer to list of free TCBs             */
-OS_EXT  OS_TCB           *OSTCBHighRdy;                    /* Pointer to highest priority TCB R-to-R   */
-OS_EXT  OS_TCB           *OSTCBList;                       /* Pointer to doubly linked list of TCBs    */
-OS_EXT  OS_TCB           *OSTCBPrioTbl[OS_LOWEST_PRIO + 1u];    /* Table of pointers to created TCBs   */
-OS_EXT  OS_TCB            OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];   /* Table of TCBs                  */
+OS_EXT  OS_TCB           *OSTCBCur;                        				/* Pointer to currently running TCB         */
+OS_EXT  OS_TCB           *OSTCBFreeList;                  				/*指向空闲任务控制块链表*/
+OS_EXT  OS_TCB           *OSTCBHighRdy;                    				/* Pointer to highest priority TCB R-to-R   */
+OS_EXT  OS_TCB           *OSTCBList;                       				/*指向就绪任务控制块链表*/
+OS_EXT  OS_TCB           *OSTCBPrioTbl[OS_LOWEST_PRIO + 1u];    		/*任务优先级指针表，用于获取某优先级的任务控制块地址*/
+OS_EXT  OS_TCB            OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];		/*任务控制块的结构体数组，实体化一共有多少任务控制块*/
 
 #if OS_TICK_STEP_EN > 0u
 OS_EXT  INT8U             OSTickStepState;          /* Indicates the state of the tick step feature    */

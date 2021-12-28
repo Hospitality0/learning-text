@@ -35,7 +35,7 @@
 *********************************************************************************************************
 */
 
-INT8U  const  OSUnMapTbl[256] = {
+INT8U  const  OSUnMapTbl[256] = {/*优先级判定表*/
     0u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x00 to 0x0F                   */
     4u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x10 to 0x1F                   */
     5u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, 3u, 0u, 1u, 0u, 2u, 0u, 1u, 0u, /* 0x20 to 0x2F                   */
@@ -1913,14 +1913,14 @@ void  OS_TaskStatStkChk (void)
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-
-INT8U  OS_TCBInit (INT8U    prio,
-                   OS_STK  *ptos,
-                   OS_STK  *pbos,
-                   INT16U   id,
-                   INT32U   stk_size,
-                   void    *pext,
-                   INT16U   opt)
+/*任务控制块初始化*/
+INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
+                   OS_STK  *ptos,		/*任务堆栈的栈顶的地址*/
+                   OS_STK  *pbos,		/*任务堆栈发栈底的地址*/
+                   INT16U   id,			/*任务ID*/
+                   INT32U   stk_size,	/*任务大小*/
+                   void    *pext,		/*任务控制块的扩展的地址*/
+                   INT16U   opt)		/*其他选项*/
 {
     OS_TCB    *ptcb;
 #if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
