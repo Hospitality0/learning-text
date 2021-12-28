@@ -1,0 +1,67 @@
+---- OS_STK Matches (66 in 6 files) ----
+Os_cfg_r.h (source):#define OS_TASK_TMR_STK_SIZE    128u   /* Timer      task stack size (# of OS_STK wide entries)        */
+Os_cfg_r.h (source):#define OS_TASK_STAT_STK_SIZE   128u   /* Statistics task stack size (# of OS_STK wide entries)        */
+Os_cfg_r.h (source):#define OS_TASK_IDLE_STK_SIZE   128u   /* Idle       task stack size (# of OS_STK wide entries)        */
+Os_cfg_r.h (source):#define OS_STK                    unsigned int
+Os_core.c (source):    #if OS_STK_GROWTH == 1u
+Os_core.c (source):    #if OS_STK_GROWTH == 1u
+Os_core.c (source):    #if OS_STK_GROWTH == 1u
+Os_core.c (source):    #if OS_STK_GROWTH == 1u
+Os_core.c (source):    OS_STK_DATA  stk_data;
+Os_core.c (source):                    #if OS_STK_GROWTH == 1u
+Os_core.c (source):*                            'high' memory location is OS_STK_GROWTH is set to 1 and a 'low' memory
+Os_core.c (source):*                            location if OS_STK_GROWTH is set to 0.  Note that stack growth is CPU
+Os_core.c (source):*                            units are established by the #define constant OS_STK which is CPU
+Os_core.c (source):                   OS_STK  *ptos,
+Os_core.c (source):                   OS_STK  *pbos,
+Os_core.c (source):        ptcb->OSTCBStkBase     = (OS_STK *)0;
+Os_dbg_r.c (source):INT16U  const  OSStkWidth          = sizeof(OS_STK);            /* Size in Bytes of a stack entry      */
+Os_task.c (source):*                       OS_STK_GROWTH is set to 1, the stack is assumed to grow downward (i.e. from high
+Os_task.c (source):*                       location of the stack.  If OS_STK_GROWTH is set to 0, 'pstk' will point to the
+Os_task.c (source):                     OS_STK  *ptos,
+Os_task.c (source):    OS_STK    *psp;
+Os_task.c (source):        err = OS_TCBInit(prio, psp, (OS_STK *)0, 0u, 0u, (void *)0, 0u);
+Os_task.c (source):*                        OS_STK_GROWTH is set to 1, the stack is assumed to grow downward (i.e. from high
+Os_task.c (source):*                        location of the stack.  If OS_STK_GROWTH is set to 0, 'ptos' will point to the
+Os_task.c (source):*                        OS_STK_GROWTH is set to 1, the stack is assumed to grow downward (i.e. from high
+Os_task.c (source):*                        location of the stack.  If OS_STK_GROWTH is set to 0, 'pbos' will point to the
+Os_task.c (source):*              stk_size  is the size of the stack in number of elements.  If OS_STK is set to INT8U,
+Os_task.c (source):*                        'stk_size' corresponds to the number of bytes available.  If OS_STK is set to
+Os_task.c (source):*                        OS_STK is set to INT32U, 'stk_size' contains the number of 32-bit entries
+Os_task.c (source):                        OS_STK  *ptos,
+Os_task.c (source):                        OS_STK  *pbos,
+Os_task.c (source):    OS_STK    *psp;
+Os_task.c (source):*              p_stk_data    is a pointer to a data structure of type OS_STK_DATA.
+Os_task.c (source):                     OS_STK_DATA  *p_stk_data)
+Os_task.c (source):    OS_STK    *pchk;
+Os_task.c (source):    if (p_stk_data == (OS_STK_DATA *)0) {              /* Validate 'p_stk_data'                        */
+Os_task.c (source):#if OS_STK_GROWTH == 1u
+Os_task.c (source):    while (*pchk++ == (OS_STK)0) {                    /* Compute the number of zero entries on the stk */
+Os_task.c (source):    while (*pchk-- == (OS_STK)0) {
+Os_task.c (source):    p_stk_data->OSFree = nfree * sizeof(OS_STK);          /* Compute number of free bytes on the stack */
+Os_task.c (source):    p_stk_data->OSUsed = (size - nfree) * sizeof(OS_STK); /* Compute number of bytes used on the stack */
+Os_task.c (source):*                       OS_STK_GROWTH is set to 1, the stack is assumed to grow downward (i.e. from high
+Os_task.c (source):*                       location of the stack.  If OS_STK_GROWTH is set to 0, 'pbos' will point to the
+Os_task.c (source):void  OS_TaskStkClr (OS_STK  *pbos,
+Os_task.c (source):#if OS_STK_GROWTH == 1u
+Os_task.c (source):                *pbos++ = (OS_STK)0;                   /* Clear from bottom of stack and up!           */
+Os_task.c (source):                *pbos-- = (OS_STK)0;                   /* Clear from bottom of stack and down          */
+Os_tmr.c (source):    #if OS_STK_GROWTH == 1u
+Os_tmr.c (source):    #if OS_STK_GROWTH == 1u
+Ucos_ii.h (source):typedef struct os_stk_data {
+Ucos_ii.h (source):} OS_STK_DATA;
+Ucos_ii.h (source):    OS_STK          *OSTCBStkPtr;           /*»ŒŒÒ∂—’ª÷∏’Î*/	/* Pointer to current top of stack                         */
+Ucos_ii.h (source):    OS_STK          *OSTCBStkBottom;        /* Pointer to bottom of stack                              */
+Ucos_ii.h (source):    OS_STK          *OSTCBStkBase;          /* Pointer to the beginning of the task stack              */
+Ucos_ii.h (source):OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /* Statistics task stack          */
+Ucos_ii.h (source):OS_EXT  OS_STK            OSTaskIdleStk[OS_TASK_IDLE_STK_SIZE];      /* Idle task stack                */
+Ucos_ii.h (source):OS_EXT  OS_STK            OSTmrTaskStk[OS_TASK_TMR_STK_SIZE];
+Ucos_ii.h (source):                                       OS_STK          *ptos,
+Ucos_ii.h (source):                                       OS_STK          *ptos,
+Ucos_ii.h (source):                                       OS_STK          *pbos,
+Ucos_ii.h (source):                                       OS_STK_DATA     *p_stk_data);
+Ucos_ii.h (source):void          OS_TaskStkClr           (OS_STK          *pbos,
+Ucos_ii.h (source):                                       OS_STK          *ptos,
+Ucos_ii.h (source):                                       OS_STK          *pbos,
+Ucos_ii.h (source):OS_STK       *OSTaskStkInit           (void           (*task)(void *p_arg),
+Ucos_ii.h (source):                                       OS_STK          *ptos,
