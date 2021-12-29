@@ -103,13 +103,13 @@ extern "C" {
 *                              TASK STATUS (Bit definition for OSTCBStat)
 *********************************************************************************************************
 */
-#define  OS_STAT_RDY                 0x00u  /* Ready to run                                            */
-#define  OS_STAT_SEM                 0x01u  /* Pending on semaphore                                    */
-#define  OS_STAT_MBOX                0x02u  /* Pending on mailbox                                      */
-#define  OS_STAT_Q                   0x04u  /* Pending on queue                                        */
-#define  OS_STAT_SUSPEND             0x08u  /* Task is suspended                                       */
-#define  OS_STAT_MUTEX               0x10u  /* Pending on mutual exclusion semaphore                   */
-#define  OS_STAT_FLAG                0x20u  /* Pending on event flag group                             */
+#define  OS_STAT_RDY                 0x00u  /*就绪态，任务未等待事件且未挂起*/
+#define  OS_STAT_SEM                 0x01u  /*，任务等待信号量*/														/* Pending on semaphore                                    */
+#define  OS_STAT_MBOX                0x02u  /*，任务等待邮箱*/															/* Pending on mailbox                                      */
+#define  OS_STAT_Q                   0x04u  /*，任务等待消息队列*/														/* Pending on queue                                        */
+#define  OS_STAT_SUSPEND             0x08u  /*，任务挂起*/																/* Task is suspended                                       */
+#define  OS_STAT_MUTEX               0x10u  /*，任务等待互斥信号量*/													/* Pending on mutual exclusion semaphore                   */
+#define  OS_STAT_FLAG                0x20u  /*，任务等待事件标志*/														/* Pending on event flag group                             */
 #define  OS_STAT_MULTI               0x80u  /* Pending on multiple events                              */
 
 #define  OS_STAT_PEND_ANY         (OS_STAT_SEM | OS_STAT_MBOX | OS_STAT_Q | OS_STAT_MUTEX | OS_STAT_FLAG)
@@ -244,7 +244,7 @@ extern "C" {
 *                                             ERROR CODES
 *********************************************************************************************************
 */
-#define OS_ERR_NONE                     0u/*调用成功*/
+#define OS_ERR_NONE                     0u
 
 #define OS_ERR_EVENT_TYPE               1u
 #define OS_ERR_PEND_ISR                 2u
@@ -564,10 +564,10 @@ typedef struct os_tcb {
     INT8U            OSTCBStatPend;         /*时间等待标志*/
     INT8U            OSTCBPrio;             /*任务优先级*/
 	/*这四个都和就绪表相关，表示任务优先级*/
-    INT8U            OSTCBX;                /* Bit position in group  corresponding to task priority   */
-    INT8U            OSTCBY;                /* Index into ready table corresponding to task priority   */
-    OS_PRIO          OSTCBBitX;             /* Bit mask to access bit position in ready table          */
-    OS_PRIO          OSTCBBitY;             /* Bit mask to access bit position in ready group          */
+    INT8U            OSTCBX;				/*优先级在表中的第几列，任务优先级低3位*/
+    INT8U            OSTCBY;				/*优先级在表中的第几行，任务优先级的高3位，任务优先级>>3，任务优先级/8*/                
+    OS_PRIO          OSTCBBitX;				/*任务优先级在对应的任务就绪表中的位置*/ 
+    OS_PRIO          OSTCBBitY;				/*任务在优先级组表中的位置*/
 
 #if OS_TASK_DEL_EN > 0u
     INT8U            OSTCBDelReq;           /*任务删除请求标志*/

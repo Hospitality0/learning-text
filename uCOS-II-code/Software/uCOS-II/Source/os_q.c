@@ -861,7 +861,7 @@ INT8U  OSQQuery (OS_EVENT  *pevent,
 * Note(s)    : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-
+/*初始化消息队列*/
 void  OS_QInit (void)
 {
 #if OS_MAX_QS == 1u

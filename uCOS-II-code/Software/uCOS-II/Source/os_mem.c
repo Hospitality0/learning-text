@@ -419,7 +419,7 @@ INT8U  OSMemQuery (OS_MEM       *pmem,
 * Note(s)    : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-
+/*³õÊ¼»¯ÄÚ´æ*/
 void  OS_MemInit (void)
 {
 #if OS_MAX_MEM_PART == 1u

@@ -1,5 +1,13 @@
----- OS_TCBInit Matches (4 in 3 files) ----
-Os_core.c (source):INT8U  OS_TCBInit (INT8U    prio,
-Os_task.c (source):        err = OS_TCBInit(prio, psp, (OS_STK *)0, 0u, 0u, (void *)0, 0u);
-Os_task.c (source):        err = OS_TCBInit(prio, psp, pbos, id, stk_size, pext, opt);
-Ucos_ii.h (source):INT8U         OS_TCBInit              (INT8U            prio,
+---- OSInit Matches (12 in 3 files) ----
+Os_core.c (source):void  OSInit (void)
+Os_core.c (source):    OSInitHookBegin();                                           /* Call port specific initialization code   */
+Os_core.c (source):    OSInitHookEnd();                                             /* Call port specific init. code            */
+Os_core.c (source):*              task that you have created.  Before you can call OSStart(), you MUST have called OSInit()
+Os_core.c (source):* Description: This function is called by OSInit() to initialize the free list of event control blocks.
+Os_core.c (source):* Description: This function is called by OSInit() to initialize miscellaneous variables.
+Os_core.c (source):* Description: This function is called by OSInit() to initialize the Ready List.
+Os_core.c (source):* Description: This function is called by OSInit() to initialize the free list of OS_TCBs.
+Os_tmr.c (source):* Description: This function is called by OSInit() to initialize the free list of OS_TMRs.
+Ucos_ii.h (source):void          OSInit                  (void);
+Ucos_ii.h (source):void          OSInitHookBegin         (void);
+Ucos_ii.h (source):void          OSInitHookEnd           (void);

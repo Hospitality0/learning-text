@@ -566,44 +566,39 @@ INT16U  OSEventPendMulti (OS_EVENT  **pevents_pend,
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*操作系统初始化*/
 void  OSInit (void)
 {
-    OSInitHookBegin();                                           /* Call port specific initialization code   */
-
-    OS_InitMisc();                                               /* Initialize miscellaneous variables       */
-
-    OS_InitRdyList();                                            /* Initialize the Ready List                */
-
-    OS_InitTCBList();                                            /* Initialize the free list of OS_TCBs      */
-
-    OS_InitEventList();                                          /* Initialize the free list of OS_EVENTs    */
-
-#if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)
-    OS_FlagInit();                                               /* Initialize the event flag structures     */
+    OSInitHookBegin();                                           /*用户可编写该函数，实现端口说明*/
+    OS_InitMisc();                                               /*初始化各种全局变量*/
+    OS_InitRdyList();                                            /*初始化就绪表*/
+    OS_InitTCBList();                                            /*初始化任务控制块，空闲链表*/
+    OS_InitEventList();                                          /*初始化空闲事件列表*/
+#if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)					 /*如果使用事件标志*/
+    OS_FlagInit();                                               /*对事件标志进行初始化*/
 #endif
 
-#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)
-    OS_MemInit();                                                /* Initialize the memory manager            */
+#if (OS_MEM_EN > 0u) && (OS_MAX_MEM_PART > 0u)					 /*如果配置内存管理*/
+    OS_MemInit();                                                /*初始化内存*/
 #endif
 
-#if (OS_Q_EN > 0u) && (OS_MAX_QS > 0u)
-    OS_QInit();                                                  /* Initialize the message queue structures  */
+#if (OS_Q_EN > 0u) && (OS_MAX_QS > 0u)							 /*如果使用消息队列*/
+    OS_QInit();                                                  /*初始化消息队列*/
 #endif
 
-    OS_InitTaskIdle();                                           /* Create the Idle Task                     */
-#if OS_TASK_STAT_EN > 0u
-    OS_InitTaskStat();                                           /* Create the Statistic Task                */
+    OS_InitTaskIdle();                                           /*创建空闲任务*/
+#if OS_TASK_STAT_EN > 0u										 /*如果有统计任务*/
+    OS_InitTaskStat();                                           /*创建统计任务*/
 #endif
 
-#if OS_TMR_EN > 0u
-    OSTmr_Init();                                                /* Initialize the Timer Manager             */
+#if OS_TMR_EN > 0u												 /*如果定时器始能*/
+    OSTmr_Init();                                                /*初始化定时器管理模块*/
 #endif
 
-    OSInitHookEnd();                                             /* Call port specific init. code            */
+    OSInitHookEnd();                                             /*用户可继续编写该函数，实现端口说明*/
 
-#if OS_DEBUG_EN > 0u
-    OSDebugInit();
+#if OS_DEBUG_EN > 0u											 /*如果支持调试*/
+    OSDebugInit();												 /*加入调试代码*/
 #endif
 }
 /*$PAGE*/
@@ -1271,7 +1266,7 @@ void  OS_EventWaitListInit (OS_EVENT *pevent)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*初始化空闲事件列表*/
 static  void  OS_InitEventList (void)
 {
 #if (OS_EVENT_EN) && (OS_MAX_EVENTS > 0u)
@@ -1363,7 +1358,7 @@ static  void  OS_InitMisc (void)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*初始化就绪表*/
 static  void  OS_InitRdyList (void)
 {
     INT8U  i;
@@ -1394,7 +1389,7 @@ static  void  OS_InitRdyList (void)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*创建空闲任务*/
 static  void  OS_InitTaskIdle (void)
 {
 #if OS_TASK_NAME_EN > 0u
@@ -1455,7 +1450,7 @@ static  void  OS_InitTaskIdle (void)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*创建统计任务*/
 #if OS_TASK_STAT_EN > 0u
 static  void  OS_InitTaskStat (void)
 {
@@ -1518,7 +1513,7 @@ static  void  OS_InitTaskStat (void)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*初始化任务控制块，空闲链表*/
 static  void  OS_InitTCBList (void)
 {
     INT8U    ix;
@@ -1930,45 +1925,45 @@ INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
     INT8U      i;
 #endif
 
+    OS_ENTER_CRITICAL();								   /*进入临界区*/
+    ptcb = OSTCBFreeList;                                  /*获取空闲的任务控制块*/
+    if (ptcb != (OS_TCB *)0) 
+	{
+        OSTCBFreeList            = ptcb->OSTCBNext;        /*把OSTCBFreeList指针移到链表的下一项*/
+        OS_EXIT_CRITICAL();								   /*推出临界区*/
+        ptcb->OSTCBStkPtr        = ptos;                   /*输入任务堆栈的栈顶的地址*/
+        ptcb->OSTCBPrio          = prio;                   /*输入优先级*/
+        ptcb->OSTCBStat          = OS_STAT_RDY;            /*刚创建的任务处于就绪态*/
+        ptcb->OSTCBStatPend      = OS_STAT_PEND_OK;        /*没有等待任务事件*/
+        ptcb->OSTCBDly           = 0u;                     /*没有设置延时*/
 
-    OS_ENTER_CRITICAL();
-    ptcb = OSTCBFreeList;                                  /* Get a free TCB from the free TCB list    */
-    if (ptcb != (OS_TCB *)0) {
-        OSTCBFreeList            = ptcb->OSTCBNext;        /* Update pointer to free TCB list          */
-        OS_EXIT_CRITICAL();
-        ptcb->OSTCBStkPtr        = ptos;                   /* Load Stack pointer in TCB                */
-        ptcb->OSTCBPrio          = prio;                   /* Load task priority into TCB              */
-        ptcb->OSTCBStat          = OS_STAT_RDY;            /* Task is ready to run                     */
-        ptcb->OSTCBStatPend      = OS_STAT_PEND_OK;        /* Clear pend status                        */
-        ptcb->OSTCBDly           = 0u;                     /* Task is not delayed                      */
-
-#if OS_TASK_CREATE_EXT_EN > 0u
-        ptcb->OSTCBExtPtr        = pext;                   /* Store pointer to TCB extension           */
-        ptcb->OSTCBStkSize       = stk_size;               /* Store stack size                         */
-        ptcb->OSTCBStkBottom     = pbos;                   /* Store pointer to bottom of stack         */
-        ptcb->OSTCBOpt           = opt;                    /* Store task options                       */
-        ptcb->OSTCBId            = id;                     /* Store task ID                            */
-#else
-        pext                     = pext;                   /* Prevent compiler warning if not used     */
+#if OS_TASK_CREATE_EXT_EN > 0u							   /*如果使用扩展功能*/
+        ptcb->OSTCBExtPtr        = pext;                   /*扩展块地址*/
+        ptcb->OSTCBStkSize       = stk_size;               /*堆栈大小*/
+        ptcb->OSTCBStkBottom     = pbos;                   /*栈底*/
+        ptcb->OSTCBOpt           = opt;                    /*扩展选项*/
+        ptcb->OSTCBId            = id;                     /*任务ID*/
+#else/*防止警告*/
+        pext                     = pext;                   
         stk_size                 = stk_size;
         pbos                     = pbos;
         opt                      = opt;
         id                       = id;
 #endif
 
-#if OS_TASK_DEL_EN > 0u
-        ptcb->OSTCBDelReq        = OS_ERR_NONE;
+#if OS_TASK_DEL_EN > 0u												/*如果允许删除任务*/
+        ptcb->OSTCBDelReq        = OS_ERR_NONE;						/*任务删除标志置NONE*/
 #endif
 
-#if OS_LOWEST_PRIO <= 63u                                         /* Pre-compute X, Y                  */
-        ptcb->OSTCBY             = (INT8U)(prio >> 3u);
-        ptcb->OSTCBX             = (INT8U)(prio & 0x07u);
-#else                                                             /* Pre-compute X, Y                  */
+#if OS_LOWEST_PRIO <= 63u                                         
+        ptcb->OSTCBY             = (INT8U)(prio >> 3u);				/*找到优先级在表的第几行*/
+        ptcb->OSTCBX             = (INT8U)(prio & 0x07u);			/*找到优先级在表的第几列*/
+#else                                                             
         ptcb->OSTCBY             = (INT8U)((INT8U)(prio >> 4u) & 0xFFu);
         ptcb->OSTCBX             = (INT8U) (prio & 0x0Fu);
 #endif
-                                                                  /* Pre-compute BitX and BitY         */
-        ptcb->OSTCBBitY          = (OS_PRIO)(1uL << ptcb->OSTCBY);
+                                                                  
+        ptcb->OSTCBBitY          = (OS_PRIO)(1uL << ptcb->OSTCBY);	/*输入优先级对应表中的位置*/
         ptcb->OSTCBBitX          = (OS_PRIO)(1uL << ptcb->OSTCBX);
 
 #if (OS_EVENT_EN)
@@ -2004,22 +1999,27 @@ INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
         }
 #endif
 
-        OSTCBInitHook(ptcb);
+        OSTCBInitHook(ptcb);							   /*空函数，内容需要读者填写，和Windows的钩子函数性质相同*/
+        OSTaskCreateHook(ptcb);                            /*又是个钩子函数，用户创建任务钩子*/
 
-        OSTaskCreateHook(ptcb);                            /* Call user defined hook                   */
-
-        OS_ENTER_CRITICAL();
-        OSTCBPrioTbl[prio] = ptcb;
-        ptcb->OSTCBNext    = OSTCBList;                    /* Link into TCB chain                      */
+		OS_ENTER_CRITICAL();							   /*进入临界区*/
+        OSTCBPrioTbl[prio] = ptcb;						   /*设置任务优先级指针表*/
+		/*将当前控制块添加到就绪表最前面*/
+        ptcb->OSTCBNext    = OSTCBList;                    
         ptcb->OSTCBPrev    = (OS_TCB *)0;
-        if (OSTCBList != (OS_TCB *)0) {
+        if (OSTCBList != (OS_TCB *)0) 
+		{
             OSTCBList->OSTCBPrev = ptcb;
         }
         OSTCBList               = ptcb;
-        OSRdyGrp               |= ptcb->OSTCBBitY;         /* Make task ready to run                   */
-        OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;
-        OSTaskCtr++;                                       /* Increment the #tasks counter             */
-        OS_EXIT_CRITICAL();
+
+
+
+		
+        OSRdyGrp               |= ptcb->OSTCBBitY;         /*设置就绪组*/
+        OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;		   /*设置就绪表*/
+        OSTaskCtr++;                                       /*任务数+1*/
+        OS_EXIT_CRITICAL();								   /*退出临界区*/
         return (OS_ERR_NONE);
     }
     OS_EXIT_CRITICAL();
