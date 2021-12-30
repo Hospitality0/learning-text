@@ -1,13 +1,19 @@
----- OSInit Matches (12 in 3 files) ----
-Os_core.c (source):void  OSInit (void)
-Os_core.c (source):    OSInitHookBegin();                                           /* Call port specific initialization code   */
-Os_core.c (source):    OSInitHookEnd();                                             /* Call port specific init. code            */
-Os_core.c (source):*              task that you have created.  Before you can call OSStart(), you MUST have called OSInit()
-Os_core.c (source):* Description: This function is called by OSInit() to initialize the free list of event control blocks.
-Os_core.c (source):* Description: This function is called by OSInit() to initialize miscellaneous variables.
-Os_core.c (source):* Description: This function is called by OSInit() to initialize the Ready List.
-Os_core.c (source):* Description: This function is called by OSInit() to initialize the free list of OS_TCBs.
-Os_tmr.c (source):* Description: This function is called by OSInit() to initialize the free list of OS_TMRs.
-Ucos_ii.h (source):void          OSInit                  (void);
-Ucos_ii.h (source):void          OSInitHookBegin         (void);
-Ucos_ii.h (source):void          OSInitHookEnd           (void);
+---- OSTaskDel Matches (18 in 6 files) ----
+Os_cfg_r.h (source):#define OS_TASK_DEL_EN            1u   /*是否允许删除任务*/																										/*     Include code for OSTaskDel()                             */
+Os_core.c (source):* Description: This function doesn't do anything.  It is called by OSTaskDel().
+Os_dbg_r.c (source):INT16U  const  OSTaskDelEn         = OS_TASK_DEL_EN;
+Os_dbg_r.c (source):    ptemp = (void const *)&OSTaskDelEn;
+Os_flag.c (source):*              OSTaskDel()      OS_TASK.C
+Os_task.c (source):* Notes      : 1) To reduce interrupt latency, OSTaskDel() 'disables' the task:
+Os_task.c (source):INT8U  OSTaskDel (INT8U prio)
+Os_task.c (source):    OSTaskDelHook(ptcb);                                /* Call user defined hook                      */
+Os_task.c (source):*              resources would not be freed.  The requesting task calls OSTaskDelReq() to indicate that
+Os_task.c (source):*              example, task #5, would call OSTaskDelReq(10).  When task #10 gets to execute, it calls
+Os_task.c (source):*                           if (OSTaskDelReq(OS_PRIO_SELF) == OS_ERR_TASK_DEL_REQ) {
+Os_task.c (source):*                               OSTaskDel(OS_PRIO_SELF);
+Os_task.c (source):INT8U  OSTaskDelReq (INT8U prio)
+Os_task.c (source):    (void)OSTaskDel(OS_PRIO_SELF);                /* Delete task if it accidentally returns!           */
+Ucos_ii.h (source):INT8U         OSTaskDel               (INT8U            prio);
+Ucos_ii.h (source):INT8U         OSTaskDelReq            (INT8U            prio);
+Ucos_ii.h (source):void          OSTaskDelHook           (OS_TCB          *ptcb);
+Ucos_ii.h (source):#error  "OS_CFG.H, Missing OS_TASK_DEL_EN: Include code for OSTaskDel()"

@@ -1387,16 +1387,14 @@ static  void  OS_InitRdyList (void)
 static  void  OS_InitTaskIdle (void)
 {
 #if OS_TASK_NAME_EN > 0u
-    INT8U  err;
+    INT8U  err;														 /*在任务使用任务名的配置下，定义整型局部变量err*/
 #endif
-
-
-#if OS_TASK_CREATE_EXT_EN > 0u
-    #if OS_STK_GROWTH == 1u
+#if OS_TASK_CREATE_EXT_EN > 0u										 /*如果使用扩展功能*/
+    #if OS_STK_GROWTH == 1u											 /*堆栈的生长方向*/
     (void)OSTaskCreateExt(OS_TaskIdle,
                           (void *)0,                                 /* No arguments passed to OS_TaskIdle() */
                           &OSTaskIdleStk[OS_TASK_IDLE_STK_SIZE - 1u],/* Set Top-Of-Stack                     */
-                          OS_TASK_IDLE_PRIO,                         /* Lowest priority level                */
+                          OS_TASK_IDLE_PRIO,                         /*空闲任务的优先级*/
                           OS_TASK_IDLE_ID,
                           &OSTaskIdleStk[0],                         /* Set Bottom-Of-Stack                  */
                           OS_TASK_IDLE_STK_SIZE,
@@ -1617,7 +1615,7 @@ void  OS_MemCopy (INT8U  *pdest,
 *              2) Rescheduling is prevented when the scheduler is locked (see OS_SchedLock())
 *********************************************************************************************************
 */
-
+/*任务调度*/
 void  OS_Sched (void)
 {
 #if OS_CRITICAL_METHOD == 3u                           /* Allocate storage for CPU status register     */
@@ -1739,7 +1737,7 @@ INT8U  OS_StrLen (INT8U *psrc)
 *                 power.
 *********************************************************************************************************
 */
-
+/*空闲任务*/
 void  OS_TaskIdle (void *p_arg)
 {
 #if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */

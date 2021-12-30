@@ -79,7 +79,7 @@ extern "C" {
 #endif
 
 #define  OS_TASK_STAT_PRIO  (OS_LOWEST_PRIO - 1u)       /* Statistic task priority                     */
-#define  OS_TASK_IDLE_PRIO  (OS_LOWEST_PRIO)            /* IDLE      task priority                     */
+#define  OS_TASK_IDLE_PRIO  (OS_LOWEST_PRIO)            /*空闲任务的优先级*/
 
 #if OS_LOWEST_PRIO <= 63u
 #define  OS_EVENT_TBL_SIZE ((OS_LOWEST_PRIO) / 8u + 1u) /* Size of event table                         */
@@ -211,10 +211,10 @@ extern "C" {
 *                                 TASK OPTIONS (see OSTaskCreateExt())
 *********************************************************************************************************
 */
-#define  OS_TASK_OPT_NONE          0x0000u  /* NO option selected                                      */
-#define  OS_TASK_OPT_STK_CHK       0x0001u  /* Enable stack checking for the task                      */
-#define  OS_TASK_OPT_STK_CLR       0x0002u  /* Clear the stack when the task is create                 */
-#define  OS_TASK_OPT_SAVE_FP       0x0004u  /* Save the contents of any floating-point registers       */
+#define  OS_TASK_OPT_NONE          0x0000u  /*啥也没选*/
+#define  OS_TASK_OPT_STK_CHK       0x0001u  /*进行堆栈检查*/
+#define  OS_TASK_OPT_STK_CLR       0x0002u  /*创建任务时清空堆栈*/
+#define  OS_TASK_OPT_SAVE_FP       0x0004u  /*保存浮点寄存器内容*/
 
 /*
 *********************************************************************************************************
@@ -1308,7 +1308,7 @@ void          OSTaskReturnHook        (OS_TCB          *ptcb);
 
 void          OSTaskStatHook          (void);
 OS_STK       *OSTaskStkInit           (void           (*task)(void *p_arg),
-                                       void            *p_arg,
+                                       void            *pdata,
                                        OS_STK          *ptos,
                                        INT16U           opt);
 
@@ -1886,4 +1886,31 @@ void          OSCtxSw                 (void);
 #endif
 
 #endif
+
+
+
+/*自己加的*/
+/*初始化任务栈*/
+OS_STK       *OSTaskStkInit           (void           (*task)(void *p_arg), /*任务代码的地址*/
+                                       void            *pdata,				/*任务参数*/
+                                       OS_STK          *ptos,				/*任务栈的栈顶指针*/
+                                       INT16U           opt)				/*栈的初始化选项*/
+{
+	INT32U *stk;
+	opt = opt;					/*防警告*/
+	stk = (INT32U*)ptos;		/*stk指向栈顶*/
+	*--stk = (INT32U)pdata;		/*参数入栈，指针上移*/
+	*--stk = 0x00000000;		/*数据入栈*/
+	*--stk = (INT32U)task;		/*任务地址入栈*/
+	*--stk = 0x00000202;		/*数据入栈*/
+	*--stk = 0xAAAAAAAA;		/*数据入栈*/
+	*--stk = 0xCCCCCCCC;		/*数据入栈*/
+	*--stk = 0xDDDDDDDD;		/*数据入栈*/
+	*--stk = 0xBBBBBBBB;		/*数据入栈*/
+	*--stk = 0x00000000;		/*数据入栈*/
+	*--stk = 0x11111111;		/*数据入栈*/
+	*--stk = 0x22222222;		/*数据入栈*/
+	*--stk = 0x33333333;		/*数据入栈*/
+	return ((OS_STK*)stk);		/*初始化成功返回栈顶指针*/
+}
 	 	   	  		 			 	    		   		 		 	 	 			 	    		   	 			 	  	 		 				 		  			 		 					 	  	  		      		  	   		      		  	 		 	      		   		 		  	 		 	      		  		  		  
