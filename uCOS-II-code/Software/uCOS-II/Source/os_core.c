@@ -1318,27 +1318,24 @@ static  void  OS_InitEventList (void)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*初始化各种全局变量*/
 static  void  OS_InitMisc (void)
 {
 #if OS_TIME_GET_SET_EN > 0u
-    OSTime                    = 0uL;                       /* Clear the 32-bit system clock            */
+    OSTime                    = 0uL;                       /*清系统时间*/
 #endif
 
-    OSIntNesting              = 0u;                        /* Clear the interrupt nesting counter      */
-    OSLockNesting             = 0u;                        /* Clear the scheduling lock counter        */
+    OSIntNesting              = 0u;                        /*清中断嵌套计数*/
+    OSLockNesting             = 0u;                        /*调度锁计数*/
+    OSTaskCtr                 = 0u;                        /*当前任务数*/
+    OSRunning                 = OS_FALSE;                  /*关闭多任务*/
+    OSCtxSwCtr                = 0u;                        /*清任务切换次数*/
+    OSIdleCtr                 = 0uL;                       /*清空闲计数器*/
 
-    OSTaskCtr                 = 0u;                        /* Clear the number of tasks                */
-
-    OSRunning                 = OS_FALSE;                  /* Indicate that multitasking not started   */
-
-    OSCtxSwCtr                = 0u;                        /* Clear the context switch counter         */
-    OSIdleCtr                 = 0uL;                       /* Clear the 32-bit idle counter            */
-
-#if OS_TASK_STAT_EN > 0u
-    OSIdleCtrRun              = 0uL;
-    OSIdleCtrMax              = 0uL;
-    OSStatRdy                 = OS_FALSE;                  /* Statistic task is not ready              */
+#if OS_TASK_STAT_EN > 0u								   /*如果需要统计函数*/
+    OSIdleCtrRun              = 0uL;					   /*1秒内空闲计数值置0*/
+    OSIdleCtrMax              = 0uL;					   /*最大空闲计数值置0*/
+    OSStatRdy                 = OS_FALSE;                  /*统计任务准备状态置false*//* Statistic task is not ready              */
 #endif
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
@@ -1362,18 +1359,15 @@ static  void  OS_InitMisc (void)
 static  void  OS_InitRdyList (void)
 {
     INT8U  i;
-
-
-    OSRdyGrp      = 0u;                                    /* Clear the ready list                     */
-    for (i = 0u; i < OS_RDY_TBL_SIZE; i++) {
+    OSRdyGrp      = 0u;                                    /*清空就绪组*/
+    for (i = 0u; i < OS_RDY_TBL_SIZE; i++)				   /*清空就绪表*/
+	{
         OSRdyTbl[i] = 0u;
     }
-
-    OSPrioCur     = 0u;
-    OSPrioHighRdy = 0u;
-
-    OSTCBHighRdy  = (OS_TCB *)0;
-    OSTCBCur      = (OS_TCB *)0;
+    OSPrioCur     = 0u;									   /*当前任务优先级*/
+    OSPrioHighRdy = 0u;									   /*运行任务的最高优先级*/
+    OSTCBHighRdy  = (OS_TCB *)0;						   /*最高优先级的任务控制块的指针*/
+    OSTCBCur      = (OS_TCB *)0;						   /*当前运行的任务控制块的指针*/
 }
 
 /*$PAGE*/
@@ -1521,10 +1515,10 @@ static  void  OS_InitTCBList (void)
     OS_TCB  *ptcb1;
     OS_TCB  *ptcb2;
 
-
-    OS_MemClr((INT8U *)&OSTCBTbl[0],     sizeof(OSTCBTbl));      /* Clear all the TCBs                 */
-    OS_MemClr((INT8U *)&OSTCBPrioTbl[0], sizeof(OSTCBPrioTbl));  /* Clear the priority table           */
-    for (ix = 0u; ix < (OS_MAX_TASKS + OS_N_SYS_TASKS - 1u); ix++) {    /* Init. list of free TCBs     */
+    OS_MemClr((INT8U *)&OSTCBTbl[0],     sizeof(OSTCBTbl));      /*清空所有的任务控制块*/
+    OS_MemClr((INT8U *)&OSTCBPrioTbl[0], sizeof(OSTCBPrioTbl));  /*清空任务优先级指针表*/
+    for (ix = 0u; ix < (OS_MAX_TASKS + OS_N_SYS_TASKS - 1u); ix++) /*把所有控制块都连上，连成一个链表*/
+	{    
         ix_next =  ix + 1u;
         ptcb1   = &OSTCBTbl[ix];
         ptcb2   = &OSTCBTbl[ix_next];
@@ -1533,13 +1527,15 @@ static  void  OS_InitTCBList (void)
         ptcb1->OSTCBTaskName = (INT8U *)(void *)"?";             /* Unknown name                       */
 #endif
     }
+
+	
     ptcb1                   = &OSTCBTbl[ix];
-    ptcb1->OSTCBNext        = (OS_TCB *)0;                       /* Last OS_TCB                        */
+    ptcb1->OSTCBNext        = (OS_TCB *)0;                       /*最后一项指向0地址*/
 #if OS_TASK_NAME_EN > 0u
     ptcb1->OSTCBTaskName    = (INT8U *)(void *)"?";              /* Unknown name                       */
 #endif
-    OSTCBList               = (OS_TCB *)0;                       /* TCB lists initializations          */
-    OSTCBFreeList           = &OSTCBTbl[0];
+    OSTCBList               = (OS_TCB *)0;                       /*就绪链表指针指向0*/
+    OSTCBFreeList           = &OSTCBTbl[0];						 /*空闲链表指针指向表头*/
 }
 /*$PAGE*/
 /*

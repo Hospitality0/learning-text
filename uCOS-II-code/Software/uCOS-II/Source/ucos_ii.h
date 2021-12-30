@@ -636,7 +636,7 @@ typedef  struct  os_tmr_wheel {
 *********************************************************************************************************
 */
 
-OS_EXT  INT32U            OSCtxSwCtr;               /* Counter of number of context switches           */
+OS_EXT  INT32U            OSCtxSwCtr;               /*任务切换次数*//* Counter of number of context switches           */
 
 #if (OS_EVENT_EN) && (OS_MAX_EVENTS > 0u)
 OS_EXT  OS_EVENT         *OSEventFreeList;          /* Pointer to list of free EVENT control blocks    */
@@ -650,27 +650,27 @@ OS_EXT  OS_FLAG_GRP      *OSFlagFreeList;           /* Pointer to free list of e
 
 #if OS_TASK_STAT_EN > 0u
 OS_EXT  INT8U             OSCPUUsage;               /* Percentage of CPU used                          */
-OS_EXT  INT32U            OSIdleCtrMax;             /* Max. value that idle ctr can take in 1 sec.     */
-OS_EXT  INT32U            OSIdleCtrRun;             /* Val. reached by idle ctr at run time in 1 sec.  */
-OS_EXT  BOOLEAN           OSStatRdy;                /* Flag indicating that the statistic task is rdy  */
+OS_EXT  INT32U            OSIdleCtrMax;             /*最大空闲计数值*//* Max. value that idle ctr can take in 1 sec.     */
+OS_EXT  INT32U            OSIdleCtrRun;             /*1秒内空闲计数值*//* Val. reached by idle ctr at run time in 1 sec.  */
+OS_EXT  BOOLEAN           OSStatRdy;                /*统计任务准备状态*//* Flag indicating that the statistic task is rdy  */
 OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /*统计任务栈*//* Statistics task stack          */
 #endif
 
-OS_EXT  INT8U             OSIntNesting;             /* Interrupt nesting level                         */
+OS_EXT  INT8U             OSIntNesting;             /*中断嵌套计数*//* Interrupt nesting level                         */
 
-OS_EXT  INT8U             OSLockNesting;            /* Multitasking lock nesting level                 */
+OS_EXT  INT8U             OSLockNesting;            /*调度锁计数*//* Multitasking lock nesting level                 */
 
-OS_EXT  INT8U             OSPrioCur;                /* Priority of current task                        */
-OS_EXT  INT8U             OSPrioHighRdy;            /* Priority of highest priority task               */
+OS_EXT  INT8U             OSPrioCur;                /*当前任务优先级*//* Priority of current task                        */
+OS_EXT  INT8U             OSPrioHighRdy;            /*运行任务的最高优先级*//* Priority of highest priority task               */
 
 OS_EXT  OS_PRIO           OSRdyGrp;                        /*任务就绪组*/
 OS_EXT  OS_PRIO           OSRdyTbl[OS_RDY_TBL_SIZE];       /*任务就绪表*/
 
 OS_EXT  BOOLEAN           OSRunning;                       /* Flag indicating that kernel is running   */
 
-OS_EXT  INT8U             OSTaskCtr;                       /* Number of tasks created                  */
+OS_EXT  INT8U             OSTaskCtr;                       /*当前任务数*//* Number of tasks created                  */
 
-OS_EXT  volatile  INT32U  OSIdleCtr;                                 /* Idle counter                   */
+OS_EXT  volatile  INT32U  OSIdleCtr;                       /*空闲计数器*//* Idle counter                   */
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
 OS_EXT  BOOLEAN           OSSafetyCriticalStartFlag;
@@ -678,9 +678,9 @@ OS_EXT  BOOLEAN           OSSafetyCriticalStartFlag;
 
 OS_EXT  OS_STK            OSTaskIdleStk[OS_TASK_IDLE_STK_SIZE];      	/*空闲任务栈*/
 
-OS_EXT  OS_TCB           *OSTCBCur;                        				/* Pointer to currently running TCB         */
+OS_EXT  OS_TCB           *OSTCBCur;                        				/*当前运行的任务控制块的指针*/
 OS_EXT  OS_TCB           *OSTCBFreeList;                  				/*指向空闲任务控制块链表*/
-OS_EXT  OS_TCB           *OSTCBHighRdy;                    				/* Pointer to highest priority TCB R-to-R   */
+OS_EXT  OS_TCB           *OSTCBHighRdy;                    				/*最高优先级的任务控制块的指针*/
 OS_EXT  OS_TCB           *OSTCBList;                       				/*指向就绪任务控制块链表*/
 OS_EXT  OS_TCB           *OSTCBPrioTbl[OS_LOWEST_PRIO + 1u];    		/*任务优先级指针表，用于获取某优先级的任务控制块地址*/
 OS_EXT  OS_TCB            OSTCBTbl[OS_MAX_TASKS + OS_N_SYS_TASKS];		/*任务控制块的结构体数组，实体化一共有多少任务控制块*/
@@ -700,7 +700,7 @@ OS_EXT  OS_Q              OSQTbl[OS_MAX_QS];        /* Table of QUEUE control bl
 #endif
 
 #if OS_TIME_GET_SET_EN > 0u
-OS_EXT  volatile  INT32U  OSTime;                   /* Current value of system time (in ticks)         */
+OS_EXT  volatile  INT32U  OSTime;                   /*当前系统时间*//* Current value of system time (in ticks)         */
 #endif
 
 #if OS_TMR_EN > 0u
