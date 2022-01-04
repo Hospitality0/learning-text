@@ -587,7 +587,6 @@ INT8U  OSTaskDel (INT8U prio)
 *                                     deleted.
 *********************************************************************************************************
 */
-/*$PAGE*/
 #if OS_TASK_DEL_EN > 0u
 INT8U  OSTaskDelReq (INT8U prio)
 {
@@ -596,41 +595,43 @@ INT8U  OSTaskDelReq (INT8U prio)
 #if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
-    if (prio == OS_TASK_IDLE_PRIO) {                            /* Not allowed to delete idle task     */
+    if (prio == OS_TASK_IDLE_PRIO)								/*检查传入的任务优先级是否有效*/ 
+	{                           
         return (OS_ERR_TASK_DEL_IDLE);
     }
 #if OS_ARG_CHK_EN > 0u
-    if (prio >= OS_LOWEST_PRIO) {                               /* Task priority valid ?               */
-        if (prio != OS_PRIO_SELF) {
+    if (prio >= OS_LOWEST_PRIO)									/*继续检查传入的任务优先级是否有效*/ 
+	{                               
+        if (prio != OS_PRIO_SELF)
+		{
             return (OS_ERR_PRIO_INVALID);
         }
     }
 #endif
-    if (prio == OS_PRIO_SELF) {                                 /* See if a task is requesting to ...  */
-        OS_ENTER_CRITICAL();                                    /* ... this task to delete itself      */
-        stat = OSTCBCur->OSTCBDelReq;                           /* Return request status to caller     */
+    if (prio == OS_PRIO_SELF)									/*如果删除自己*/
+	{                                 
+        OS_ENTER_CRITICAL();                                    /*进入临界区*/
+        stat = OSTCBCur->OSTCBDelReq;                           /*任务控制块中存放了是否有删除请求*/
         OS_EXIT_CRITICAL();
         return (stat);
     }
-    OS_ENTER_CRITICAL();
-    ptcb = OSTCBPrioTbl[prio];
-    if (ptcb == (OS_TCB *)0) {                                  /* Task to delete must exist           */
+    OS_ENTER_CRITICAL();										/*进入临界区*/
+    ptcb = OSTCBPrioTbl[prio];									/*获取任务控制块地址*/
+    if (ptcb == (OS_TCB *)0)
+	{                                 
         OS_EXIT_CRITICAL();
-        return (OS_ERR_TASK_NOT_EXIST);                         /* Task must already be deleted        */
+        return (OS_ERR_TASK_NOT_EXIST);                         /*不存在返回错误*/
     }
-    if (ptcb == OS_TCB_RESERVED) {                              /* Must NOT be assigned to a Mutex     */
+    if (ptcb == OS_TCB_RESERVED)								/*如果任务控制块被保留*/
+	{                              
         OS_EXIT_CRITICAL();
-        return (OS_ERR_TASK_DEL);
+        return (OS_ERR_TASK_DEL);								/*返回错误信息*/
     }
-    ptcb->OSTCBDelReq = OS_ERR_TASK_DEL_REQ;                    /* Set flag indicating task to be DEL. */
+    ptcb->OSTCBDelReq = OS_ERR_TASK_DEL_REQ;                    /*在对方任务控制块上打上删除成功的标志*/
     OS_EXIT_CRITICAL();
     return (OS_ERR_NONE);
 }
 #endif
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                        GET THE NAME OF A TASK
