@@ -70,7 +70,7 @@ extern "C" {
 
 #define  OS_ASCII_NUL            (INT8U)0
 
-#define  OS_PRIO_SELF                0xFFu              /* Indicate SELF priority                      */
+#define  OS_PRIO_SELF                0xFFu              /*删除任务优先级置FF*//* Indicate SELF priority                      */
 
 #if OS_TASK_STAT_EN > 0u								/*有没有统计任务*/
 #define  OS_N_SYS_TASKS                 2u              /*系统任务数*/
@@ -93,7 +93,7 @@ extern "C" {
 #define  OS_TASK_STAT_ID            65534u
 #define  OS_TASK_TMR_ID             65533u
 
-#define  OS_EVENT_EN           (((OS_Q_EN > 0u) && (OS_MAX_QS > 0u)) || (OS_MBOX_EN > 0u) || (OS_SEM_EN > 0u) || (OS_MUTEX_EN > 0u))
+#define  OS_EVENT_EN           /*使用事件操作*/(((OS_Q_EN > 0u) && (OS_MAX_QS > 0u)) || (OS_MBOX_EN > 0u) || (OS_SEM_EN > 0u) || (OS_MUTEX_EN > 0u))
 
 #define  OS_TCB_RESERVED        ((OS_TCB *)1)
 
@@ -1299,8 +1299,8 @@ void          OSDebugInit             (void);
 void          OSInitHookBegin         (void);
 void          OSInitHookEnd           (void);
 
-void          OSTaskCreateHook        (OS_TCB          *ptcb);
-void          OSTaskDelHook           (OS_TCB          *ptcb);
+void          OSTaskCreateHook        (OS_TCB          *ptcb);/*创建钩子函数*/
+void          OSTaskDelHook           (OS_TCB          *ptcb);/*删除钩子函数*/
 
 void          OSTaskIdleHook          (void);
 

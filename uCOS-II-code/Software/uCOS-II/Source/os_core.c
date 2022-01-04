@@ -986,6 +986,7 @@ INT16U  OSVersion (void)
 */
 
 #if OS_TASK_DEL_EN > 0u
+/*¿Õº¯Êý*/
 void  OS_Dummy (void)
 {
 }

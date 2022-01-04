@@ -29,12 +29,12 @@
 
                                        /* ---------------------- MISCELLANEOUS ----------------------- */
 #define OS_APP_HOOKS_EN           1u   /* Application-defined hooks are called from the uC/OS-II hooks */
-#define OS_ARG_CHK_EN             0u   /* Enable (1) or Disable (0) argument checking                  */
+#define OS_ARG_CHK_EN             0u   /*是否参数检查*/
 #define OS_CPU_HOOKS_EN           1u   /* uC/OS-II hooks are found in the processor port files         */
 
 #define OS_DEBUG_EN               1u   /* Enable(1) debug variables                                    */
 
-#define OS_EVENT_MULTI_EN         1u   /* Include code for OSEventPendMulti()                          */
+#define OS_EVENT_MULTI_EN         1u   /*允许任务等待多事件*//* Include code for OSEventPendMulti()                          */
 #define OS_EVENT_NAME_EN          1u   /* Enable names for Sem, Mutex, Mbox and Q                      */
 
 #define OS_LOWEST_PRIO           63u   /*最低优先级的任务优先级*/
