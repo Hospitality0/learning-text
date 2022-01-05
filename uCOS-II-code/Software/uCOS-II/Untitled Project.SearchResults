@@ -1,5 +1,7 @@
----- OSTaskResume Matches (4 in 3 files) ----
+---- OSTaskSuspend Matches (6 in 4 files) ----
 Os_cfg_r.h (source):#define OS_TASK_SUSPEND_EN        1u   /*     Include code for OSTaskSuspend() and OSTaskResume()      */
-Os_task.c (source):INT8U  OSTaskResume (INT8U prio)
-Ucos_ii.h (source):INT8U         OSTaskResume            (INT8U            prio);
+Os_core.c (source):        (void)OSTaskSuspend(OS_PRIO_SELF);
+Os_task.c (source):*              priority passed to OSTaskSuspend() is the priority of the calling task or OS_PRIO_SELF.
+Os_task.c (source):INT8U  OSTaskSuspend (INT8U prio)
+Ucos_ii.h (source):INT8U         OSTaskSuspend           (INT8U            prio);
 Ucos_ii.h (source):#error  "OS_CFG.H, Missing OS_TASK_SUSPEND_EN: Include code for OSTaskSuspend() and OSTaskResume()"

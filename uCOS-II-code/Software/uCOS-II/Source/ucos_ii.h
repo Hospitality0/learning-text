@@ -290,8 +290,8 @@ extern "C" {
 #define OS_ERR_TASK_NOT_SUSPENDED      68u
 #define OS_ERR_TASK_OPT                69u
 #define OS_ERR_TASK_RESUME_PRIO        70u
-#define OS_ERR_TASK_SUSPEND_IDLE       71u
-#define OS_ERR_TASK_SUSPEND_PRIO       72u
+#define OS_ERR_TASK_SUSPEND_IDLE       71u/*试图阻塞空闲任务*/
+#define OS_ERR_TASK_SUSPEND_PRIO       72u/*阻塞任务不存在*/
 #define OS_ERR_TASK_WAITING            73u
 
 #define OS_ERR_TIME_NOT_DLY            80u

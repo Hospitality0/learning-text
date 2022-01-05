@@ -810,7 +810,6 @@ void  OSTaskNameSet (INT8U   prio,
 *              OS_ERR_TASK_NOT_SUSPENDED  if the task to resume has not been suspended
 *********************************************************************************************************
 */
-
 #if OS_TASK_SUSPEND_EN > 0u
 INT8U  OSTaskResume (INT8U prio)
 {
@@ -818,38 +817,46 @@ INT8U  OSTaskResume (INT8U prio)
 #if OS_CRITICAL_METHOD == 3u                                  /* Storage for CPU status register       */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #if OS_ARG_CHK_EN > 0u
-    if (prio >= OS_LOWEST_PRIO) {                             /* Make sure task priority is valid      */
+    if (prio >= OS_LOWEST_PRIO) 
+	{
         return (OS_ERR_PRIO_INVALID);
     }
 #endif
     OS_ENTER_CRITICAL();
-    ptcb = OSTCBPrioTbl[prio];
-    if (ptcb == (OS_TCB *)0) {                                /* Task to suspend must exist            */
+    ptcb = OSTCBPrioTbl[prio];/*获取控制块地址*/
+    if (ptcb == (OS_TCB *)0)/*控制块不存在*/
+	{
         OS_EXIT_CRITICAL();
         return (OS_ERR_TASK_RESUME_PRIO);
     }
-    if (ptcb == OS_TCB_RESERVED) {                            /* See if assigned to Mutex              */
+    if (ptcb == OS_TCB_RESERVED)/*控制块被保留*/
+	{
         OS_EXIT_CRITICAL();
         return (OS_ERR_TASK_NOT_EXIST);
     }
-    if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) != OS_STAT_RDY) { /* Task must be suspended                */
-        ptcb->OSTCBStat &= (INT8U)~(INT8U)OS_STAT_SUSPEND;    /* Remove suspension                     */
-        if (ptcb->OSTCBStat == OS_STAT_RDY) {                 /* See if task is now ready              */
-            if (ptcb->OSTCBDly == 0u) {
+    if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) != OS_STAT_RDY)/*恢复的任务不是SUSPEND状态*/
+	{
+        ptcb->OSTCBStat &= (INT8U)~(INT8U)OS_STAT_SUSPEND;/*移除SUSPEND状态*/
+        if (ptcb->OSTCBStat == OS_STAT_RDY)/*如果是就绪态*/
+		{
+            if (ptcb->OSTCBDly == 0u)/*如果没有延时*/
+			{
                 OSRdyGrp               |= ptcb->OSTCBBitY;    /* Yes, Make task ready to run           */
                 OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;
                 OS_EXIT_CRITICAL();
-                if (OSRunning == OS_TRUE) {
+                if (OSRunning == OS_TRUE)
+				{
                     OS_Sched();                               /* Find new highest priority task        */
                 }
-            } else {
+            }
+			else
+			{
                 OS_EXIT_CRITICAL();
             }
-        } else {                                              /* Must be pending on event              */
+        }
+		else
+		{                                              /* Must be pending on event              */
             OS_EXIT_CRITICAL();
         }
         return (OS_ERR_NONE);
@@ -939,7 +946,6 @@ INT8U  OSTaskStkChk (INT8U         prio,
     return (OS_ERR_NONE);
 }
 #endif
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                            SUSPEND A TASK
@@ -962,7 +968,6 @@ INT8U  OSTaskStkChk (INT8U         prio,
 *              running when the event arrives.
 *********************************************************************************************************
 */
-
 #if OS_TASK_SUSPEND_EN > 0u
 INT8U  OSTaskSuspend (INT8U prio)
 {
@@ -976,42 +981,55 @@ INT8U  OSTaskSuspend (INT8U prio)
 
 
 #if OS_ARG_CHK_EN > 0u
-    if (prio == OS_TASK_IDLE_PRIO) {                            /* Not allowed to suspend idle task    */
+    if (prio == OS_TASK_IDLE_PRIO)				/*不允许阻塞空闲任务*/
+	{
         return (OS_ERR_TASK_SUSPEND_IDLE);
     }
-    if (prio >= OS_LOWEST_PRIO) {                               /* Task priority valid ?               */
-        if (prio != OS_PRIO_SELF) {
+    if (prio >= OS_LOWEST_PRIO)					/*优先级无效*/
+	{                               
+        if (prio != OS_PRIO_SELF)				/*不是自己*/
+		{
             return (OS_ERR_PRIO_INVALID);
         }
     }
 #endif
     OS_ENTER_CRITICAL();
-    if (prio == OS_PRIO_SELF) {                                 /* See if suspend SELF                 */
-        prio = OSTCBCur->OSTCBPrio;
+    if (prio == OS_PRIO_SELF)					/*如果阻塞自己*/
+	{                                 
+        prio = OSTCBCur->OSTCBPrio;				/*获取自己真正优先级*/
         self = OS_TRUE;
-    } else if (prio == OSTCBCur->OSTCBPrio) {                   /* See if suspending self              */
-        self = OS_TRUE;
-    } else {
-        self = OS_FALSE;                                        /* No suspending another task          */
     }
-    ptcb = OSTCBPrioTbl[prio];
-    if (ptcb == (OS_TCB *)0) {                                  /* Task to suspend must exist          */
+	else if (prio == OSTCBCur->OSTCBPrio)		/*阻塞任务是当前任务*/
+	{
+        self = OS_TRUE;
+    }
+	else
+	{
+        self = OS_FALSE;
+    }
+    ptcb = OSTCBPrioTbl[prio];					/*获取当前任务控制块地址*/
+    if (ptcb == (OS_TCB *)0)					/*当前控制块不存在*/
+	{
         OS_EXIT_CRITICAL();
         return (OS_ERR_TASK_SUSPEND_PRIO);
     }
-    if (ptcb == OS_TCB_RESERVED) {                              /* See if assigned to Mutex            */
+    if (ptcb == OS_TCB_RESERVED)				/*控制块需要保留*/
+	{
         OS_EXIT_CRITICAL();
         return (OS_ERR_TASK_NOT_EXIST);
     }
+	/*取消就绪表和就绪组中的标志位，操作一下*/
     y            = ptcb->OSTCBY;
-    OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;                   /* Make task not ready                 */
-    if (OSRdyTbl[y] == 0u) {
+    OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;
+    if (OSRdyTbl[y] == 0u)
+	{
         OSRdyGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
     }
-    ptcb->OSTCBStat |= OS_STAT_SUSPEND;                         /* Status of task is 'SUSPENDED'       */
+    ptcb->OSTCBStat |= OS_STAT_SUSPEND;			/*标记任务被挂起了*/
     OS_EXIT_CRITICAL();
-    if (self == OS_TRUE) {                                      /* Context switch only if SELF         */
-        OS_Sched();                                             /* Find new highest priority task      */
+    if (self == OS_TRUE)						/*如果挂起的是自己就调度一下*/
+	{
+        OS_Sched();
     }
     return (OS_ERR_NONE);
 }
