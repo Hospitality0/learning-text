@@ -824,30 +824,30 @@ INT8U  OSTaskResume (INT8U prio)
     }
 #endif
     OS_ENTER_CRITICAL();
-    ptcb = OSTCBPrioTbl[prio];/*获取控制块地址*/
-    if (ptcb == (OS_TCB *)0)/*控制块不存在*/
+    ptcb = OSTCBPrioTbl[prio];									/*获取控制块地址*/
+    if (ptcb == (OS_TCB *)0)									/*控制块不存在*/
 	{
         OS_EXIT_CRITICAL();
         return (OS_ERR_TASK_RESUME_PRIO);
     }
-    if (ptcb == OS_TCB_RESERVED)/*控制块被保留*/
+    if (ptcb == OS_TCB_RESERVED)								/*控制块被保留*/
 	{
         OS_EXIT_CRITICAL();
         return (OS_ERR_TASK_NOT_EXIST);
     }
-    if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) != OS_STAT_RDY)/*恢复的任务不是SUSPEND状态*/
+    if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) != OS_STAT_RDY)		/*恢复的任务不是SUSPEND状态*/
 	{
-        ptcb->OSTCBStat &= (INT8U)~(INT8U)OS_STAT_SUSPEND;/*移除SUSPEND状态*/
-        if (ptcb->OSTCBStat == OS_STAT_RDY)/*如果是就绪态*/
+        ptcb->OSTCBStat &= (INT8U)~(INT8U)OS_STAT_SUSPEND;		/*移除SUSPEND状态*/
+        if (ptcb->OSTCBStat == OS_STAT_RDY)						/*如果是就绪态*/
 		{
-            if (ptcb->OSTCBDly == 0u)/*如果没有延时*/
+            if (ptcb->OSTCBDly == 0u)							/*如果没有延时*/
 			{
-                OSRdyGrp               |= ptcb->OSTCBBitY;    /* Yes, Make task ready to run           */
-                OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;
+                OSRdyGrp               |= ptcb->OSTCBBitY;		/*设置就绪组*/
+                OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;		/*设置就绪表*/
                 OS_EXIT_CRITICAL();
-                if (OSRunning == OS_TRUE)
+                if (OSRunning == OS_TRUE)						/*调度一下*/
 				{
-                    OS_Sched();                               /* Find new highest priority task        */
+                    OS_Sched();                               
                 }
             }
 			else
@@ -856,7 +856,7 @@ INT8U  OSTaskResume (INT8U prio)
             }
         }
 		else
-		{                                              /* Must be pending on event              */
+		{                                              
             OS_EXIT_CRITICAL();
         }
         return (OS_ERR_NONE);
@@ -865,7 +865,6 @@ INT8U  OSTaskResume (INT8U prio)
     return (OS_ERR_TASK_NOT_SUSPENDED);
 }
 #endif
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                             STACK CHECKING

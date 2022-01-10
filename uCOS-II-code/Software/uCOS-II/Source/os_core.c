@@ -654,30 +654,35 @@ void  OSIntEnter (void)
 *              2) Rescheduling is prevented when the scheduler is locked (see OS_SchedLock())
 *********************************************************************************************************
 */
-
+/*时钟中断中任务切换*/
 void  OSIntExit (void)
 {
-#if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
+#if OS_CRITICAL_METHOD == 3u                                /* Allocate storage for CPU status register */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
 
 
 
-    if (OSRunning == OS_TRUE) {
+    if (OSRunning == OS_TRUE)								/*多任务的时候才能调度*/
+	{
         OS_ENTER_CRITICAL();
-        if (OSIntNesting > 0u) {                           /* Prevent OSIntNesting from wrapping       */
-            OSIntNesting--;
+        if (OSIntNesting > 0u)								/*如果当前有中断嵌套*/
+		{
+            OSIntNesting--;									/*退出的时候嵌套数-1*/
         }
-        if (OSIntNesting == 0u) {                          /* Reschedule only if all ISRs complete ... */
-            if (OSLockNesting == 0u) {                     /* ... and not locked.                      */
-                OS_SchedNew();
-                OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
-                if (OSPrioHighRdy != OSPrioCur) {          /* No Ctx Sw if current task is highest rdy */
+        if (OSIntNesting == 0u)								/*当前没中断嵌套*/
+		{
+            if (OSLockNesting == 0u)						/*调度器未加锁*/
+			{
+                OS_SchedNew();								/*确定最高优先级的就绪任务的*/
+                OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];	/*获取优先级最高的任务控制块*/
+                if (OSPrioHighRdy != OSPrioCur)				/*最高优先级的是不是当前任务*/
+				{
 #if OS_TASK_PROFILE_EN > 0u
-                    OSTCBHighRdy->OSTCBCtxSwCtr++;         /* Inc. # of context switches to this task  */
+                    OSTCBHighRdy->OSTCBCtxSwCtr++;
 #endif
-                    OSCtxSwCtr++;                          /* Keep track of the number of ctx switches */
-                    OSIntCtxSw();                          /* Perform interrupt level ctx switch       */
+                    OSCtxSwCtr++;
+                    OSIntCtxSw();							/*切换任务*/
                 }
             }
         }
@@ -817,12 +822,13 @@ void  OSSchedUnlock (void)
 
 void  OSStart (void)
 {
-    if (OSRunning == OS_FALSE) {
-        OS_SchedNew();                               /* Find highest priority's task priority number   */
+    if (OSRunning == OS_FALSE)						/*如果系统没有启动多任务*/
+	{
+        OS_SchedNew();								/*找到优先级最高的任务*/
         OSPrioCur     = OSPrioHighRdy;
-        OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy]; /* Point to highest priority task ready to run    */
+        OSTCBHighRdy  = OSTCBPrioTbl[OSPrioHighRdy];
         OSTCBCur      = OSTCBHighRdy;
-        OSStartHighRdy();                            /* Execute target specific code to start task     */
+        OSStartHighRdy();							/*启动多任务*/
     }
 }
 /*$PAGE*/
@@ -847,22 +853,21 @@ void  OSStart (void)
 */
 
 #if OS_TASK_STAT_EN > 0u
+/*统计任务的初始化，获取系统空闲计数的最大值*/
+/*该函数在用户任务中被调用，这函数在一直过程中命名为TaskStart，优先级是0*/
 void  OSStatInit (void)
 {
 #if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
-    OSTimeDly(2u);                               /* Synchronize with clock tick                        */
+    OSTimeDly(2u);								/*延时两个时钟周期，目的是与时钟同步*/
     OS_ENTER_CRITICAL();
-    OSIdleCtr    = 0uL;                          /* Clear idle counter                                 */
+    OSIdleCtr    = 0uL;							/*空闲计数器清0*/
     OS_EXIT_CRITICAL();
-    OSTimeDly(OS_TICKS_PER_SEC / 10u);           /* Determine MAX. idle counter value for 1/10 second  */
+    OSTimeDly(OS_TICKS_PER_SEC / 10u);			/*延时100ms*/
     OS_ENTER_CRITICAL();
-    OSIdleCtrMax = OSIdleCtr;                    /* Store maximum idle counter count in 1/10 second    */
-    OSStatRdy    = OS_TRUE;
+    OSIdleCtrMax = OSIdleCtr;					/*获取最大空闲计数值*/
+    OSStatRdy    = OS_TRUE;						/*统计任务准备状态OK*/
     OS_EXIT_CRITICAL();
 }
 #endif
@@ -880,7 +885,7 @@ void  OSStatInit (void)
 * Returns    : none
 *********************************************************************************************************
 */
-
+/*时间片调度函数*/
 void  OSTimeTick (void)
 {
     OS_TCB    *ptcb;
@@ -890,18 +895,16 @@ void  OSTimeTick (void)
 #if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register     */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #if OS_TIME_TICK_HOOK_EN > 0u
-    OSTimeTickHook();                                      /* Call user definable hook                     */
+    OSTimeTickHook();                                      /*调用用户的钩子函数*/
 #endif
 #if OS_TIME_GET_SET_EN > 0u
-    OS_ENTER_CRITICAL();                                   /* Update the 32-bit tick counter               */
-    OSTime++;
+    OS_ENTER_CRITICAL();
+    OSTime++;											   /*调度计数器+1*/
     OS_EXIT_CRITICAL();
 #endif
-    if (OSRunning == OS_TRUE) {
+    if (OSRunning == OS_TRUE)							   /*如果已经启动了多任务*/
+	{
 #if OS_TICK_STEP_EN > 0u
         switch (OSTickStepState) {                         /* Determine whether we need to process a tick  */
             case OS_TICK_STEP_DIS:                         /* Yes, stepping is disabled                    */
@@ -926,33 +929,37 @@ void  OSTimeTick (void)
             return;
         }
 #endif
-        ptcb = OSTCBList;                                  /* Point at first TCB in TCB list               */
-        while (ptcb->OSTCBPrio != OS_TASK_IDLE_PRIO) {     /* Go through all TCBs in TCB list              */
+        ptcb = OSTCBList;                                  /*ptcb指向就绪链表的表头*/
+        while (ptcb->OSTCBPrio != OS_TASK_IDLE_PRIO)	   /*如果就绪表头的任务不是空闲*/
+		{
             OS_ENTER_CRITICAL();
-            if (ptcb->OSTCBDly != 0u) {                    /* No, Delayed or waiting for event with TO     */
-                ptcb->OSTCBDly--;                          /* Decrement nbr of ticks to end of delay       */
-                if (ptcb->OSTCBDly == 0u) {                /* Check for timeout                            */
-
-                    if ((ptcb->OSTCBStat & OS_STAT_PEND_ANY) != OS_STAT_RDY) {
-                        ptcb->OSTCBStat  &= (INT8U)~(INT8U)OS_STAT_PEND_ANY;          /* Yes, Clear status flag   */
-                        ptcb->OSTCBStatPend = OS_STAT_PEND_TO;                 /* Indicate PEND timeout    */
-                    } else {
-                        ptcb->OSTCBStatPend = OS_STAT_PEND_OK;
+            if (ptcb->OSTCBDly != 0u)                      /*如果该任务设置了时间延时或事件等待延时*/
+			{
+                ptcb->OSTCBDly--;                          /*延时-1，因为过了一个时钟滴答*/
+                if (ptcb->OSTCBDly == 0u)                  /*延时到期*/
+				{
+                    if ((ptcb->OSTCBStat & OS_STAT_PEND_ANY) != OS_STAT_RDY)			/*如果任务有等待事件*/
+					{
+                        ptcb->OSTCBStat  &= (INT8U)~(INT8U)OS_STAT_PEND_ANY;			/*清任务状态*/
+                        ptcb->OSTCBStatPend = OS_STAT_PEND_TO;                 			/*指示事件因超时而结束*/
                     }
-
-                    if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) == OS_STAT_RDY) {  /* Is task suspended?       */
-                        OSRdyGrp               |= ptcb->OSTCBBitY;             /* No,  Make ready          */
+					else
+					{
+                        ptcb->OSTCBStatPend = OS_STAT_PEND_OK;							/*指示延时时间到了*/
+                    }
+                    if ((ptcb->OSTCBStat & OS_STAT_SUSPEND) == OS_STAT_RDY)				/*如果任务不是被挂起的*/
+					{
+                        OSRdyGrp               |= ptcb->OSTCBBitY;             			/* No,  Make ready          */
                         OSRdyTbl[ptcb->OSTCBY] |= ptcb->OSTCBBitX;
                     }
                 }
             }
-            ptcb = ptcb->OSTCBNext;                        /* Point at next TCB in TCB list                */
+            ptcb = ptcb->OSTCBNext;                        /*指向下一个TCB*/
             OS_EXIT_CRITICAL();
         }
     }
 }
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                             GET VERSION
@@ -1619,23 +1626,23 @@ void  OS_MemCopy (INT8U  *pdest,
 /*任务调度*/
 void  OS_Sched (void)
 {
-#if OS_CRITICAL_METHOD == 3u                           /* Allocate storage for CPU status register     */
+#if OS_CRITICAL_METHOD == 3u							/* Allocate storage for CPU status register     */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
     OS_ENTER_CRITICAL();
-    if (OSIntNesting == 0u) {                          /* Schedule only if all ISRs done and ...       */
-        if (OSLockNesting == 0u) {                     /* ... scheduler is not locked                  */
-            OS_SchedNew();
-            OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];
-            if (OSPrioHighRdy != OSPrioCur) {          /* No Ctx Sw if current task is highest rdy     */
+    if (OSIntNesting == 0u)								/*调度任务时必须没在中断里*/
+	{
+        if (OSLockNesting == 0u)						/*调度器没有上锁*/
+		{
+            OS_SchedNew();								/*找到最高优先级的任务*/
+            OSTCBHighRdy = OSTCBPrioTbl[OSPrioHighRdy];	/*获取优先级最高任务控制块地址*/
+            if (OSPrioHighRdy != OSPrioCur)				/*如果不是当前任务，就要进行切换*/
+			{
 #if OS_TASK_PROFILE_EN > 0u
-                OSTCBHighRdy->OSTCBCtxSwCtr++;         /* Inc. # of context switches to this task      */
+                OSTCBHighRdy->OSTCBCtxSwCtr++;			/*任务调度次数++*/
 #endif
-                OSCtxSwCtr++;                          /* Increment context switch counter             */
-                OS_TASK_SW();                          /* Perform a context switch                     */
+                OSCtxSwCtr++;							/*操作系统切换任务次数++*/
+                OS_TASK_SW();							/*进行任务切换*/
             }
         }
     }
@@ -1658,20 +1665,16 @@ void  OS_Sched (void)
 *              2) Interrupts are assumed to be disabled when this function is called.
 *********************************************************************************************************
 */
-
+/*用来确定最高优先级的就绪任务*/
 static  void  OS_SchedNew (void)
 {
 #if OS_LOWEST_PRIO <= 63u                        /* See if we support up to 64 tasks                   */
     INT8U   y;
-
-
     y             = OSUnMapTbl[OSRdyGrp];
     OSPrioHighRdy = (INT8U)((y << 3u) + OSUnMapTbl[OSRdyTbl[y]]);
 #else                                            /* We support up to 256 tasks                         */
     INT8U     y;
     OS_PRIO  *ptbl;
-
-
     if ((OSRdyGrp & 0xFFu) != 0u) {
         y = OSUnMapTbl[OSRdyGrp & 0xFFu];
     } else {
@@ -1747,12 +1750,13 @@ void  OS_TaskIdle (void *p_arg)
 
 
 
-    p_arg = p_arg;                               /* Prevent compiler warning for not using 'p_arg'     */
-    for (;;) {
+    p_arg = p_arg;								/*防止报错*/
+    for (;;)
+	{
         OS_ENTER_CRITICAL();
-        OSIdleCtr++;
+        OSIdleCtr++;							/*空闲计数器++*/
         OS_EXIT_CRITICAL();
-        OSTaskIdleHook();                        /* Call user definable HOOK                           */
+        OSTaskIdleHook();						/*钩子函数*/
     }
 }
 /*$PAGE*/
@@ -1781,25 +1785,26 @@ void  OS_TaskIdle (void *p_arg)
 */
 
 #if OS_TASK_STAT_EN > 0u
+/*统计任务*/
 void  OS_TaskStat (void *p_arg)
 {
 #if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
     p_arg = p_arg;                               /* Prevent compiler warning for not using 'p_arg'     */
-    while (OSStatRdy == OS_FALSE) {
+    while (OSStatRdy == OS_FALSE)
+	{
         OSTimeDly(2u * OS_TICKS_PER_SEC / 10u);  /* Wait until statistic task is ready                 */
     }
     OSIdleCtrMax /= 100uL;
-    if (OSIdleCtrMax == 0uL) {
+    if (OSIdleCtrMax == 0uL)
+	{
         OSCPUUsage = 0u;
 #if OS_TASK_SUSPEND_EN > 0u
         (void)OSTaskSuspend(OS_PRIO_SELF);
 #else
-        for (;;) {
+        for (;;)
+		{
             OSTimeDly(OS_TICKS_PER_SEC);
         }
 #endif
@@ -1905,12 +1910,12 @@ void  OS_TaskStatStkChk (void)
 */
 /*任务控制块初始化*/
 INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
-                   OS_STK  *ptos,		/*任务堆栈的栈顶的地址*/
-                   OS_STK  *pbos,		/*任务堆栈发栈底的地址*/
-                   INT16U   id,			/*任务ID*/
-                   INT32U   stk_size,	/*任务大小*/
-                   void    *pext,		/*任务控制块的扩展的地址*/
-                   INT16U   opt)		/*其他选项*/
+                   OS_STK  *ptos,		    /*任务堆栈的栈顶的地址*/
+                   OS_STK  *pbos,		    /*任务堆栈发栈底的地址*/
+                   INT16U   id,			    /*任务ID*/
+                   INT32U   stk_size,	    /*任务栈大小*/
+                   void    *pext,		    /*任务控制块的扩展的地址*/
+                   INT16U   opt)		    /*其他选项*/
 {
     OS_TCB    *ptcb;
 #if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
@@ -1998,7 +2003,7 @@ INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
         OSTaskCreateHook(ptcb);                            /*又是个钩子函数，用户创建任务钩子*/
 
 		OS_ENTER_CRITICAL();							   /*进入临界区*/
-        OSTCBPrioTbl[prio] = ptcb;						   /*设置任务优先级指针表*/
+        OSTCBPrioTbl[prio] = ptcb;						   /*把初始化任务控制块的地址给任务优先级指针表*/
 		/*将当前控制块添加到就绪表最前面*/
         ptcb->OSTCBNext    = OSTCBList;                    
         ptcb->OSTCBPrev    = (OS_TCB *)0;
@@ -2020,4 +2025,62 @@ INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
     OS_EXIT_CRITICAL();
     return (OS_ERR_TASK_NO_MORE_TCB);
 }
-	 	   	  		 			 	    		   		 		 	 	 			 	    		   	 			 	  	 		 				 		  			 		 					 	  	  		      		  	   		      		  	 		 	      		   		 		  	 		 	      		  		  		  
+
+
+
+
+
+
+
+
+OS_TASK_SW(void)
+{
+	_asm							/*嵌入汇编代码，将各寄存器的值保存到堆栈中，为换出的环境做准备*/
+	{
+		lea eax,nextstart			/*将nextstart的地址送入EAX寄存器*/
+		push eax					/*将nextstart地址入栈*/
+		pushfd						/*标志寄存器值入栈*/
+		pushad						/*依次把很多寄存器的值入栈*/
+		mov ebx,[OSTCBCur]			/*当前任务控制块地址放入寄存器ebx*/
+		mov [ebx],esp				/*把当前任务的栈顶指针保存到TCB结构中，因为TCB的第一项就是栈顶地址*/
+	}								/*前面的一段汇编程序实现了把当前任务的返回地址入栈，寄存器的值入栈，把任务栈的地址保存到任务控制块，实现了运行环境的保存，以便之后恢复*/
+	OSTaskSwHook();					/*钩子函数默认为空*/
+	OSTCBCur = OSTCBHighRdy;		/*更新当前任务控制块指针指向的任务快*/
+	OSPrioCur = y;					/*将当前任务的优先级转化为新任务的优先级*/
+
+	_asm/*恢复运行环境*/
+	{
+		mov ebx,[OSTCBCur]			/*将目标任务堆栈的地址送入ebx*/
+		mov esp,[ebx]				/*获取目标任务上次保存的esp*/
+		popad						/*恢复通用寄存器的值*/
+		popfd						/*恢复标志寄存器*/
+		ret							/*跳转到指定任务运行，因为不能直接给指令寄存器直接赋值，所以要跳转到nextstart只能用ret，ret指令是将cs和ip赋堆栈里面存的值，这样程序就能从nextstart继续执行了*/
+	}
+	nextstart:						/*任务切换回来的运行地址*/
+		return;
+
+}
+
+
+
+void OSIntCtxSw(void)
+{
+	/*入栈存CPU值*/
+	/*全局变量赋值*/
+	/*出栈恢复CPU值*/
+}
+
+
+void OSStartHighRdy(void)/*启动多任务*/
+{
+	OSTaskSwHook();					/*钩子函数*/
+	OSRunning = OS_TRUE;			/*标志位变成启动多任务*/
+	_asm
+	{
+		/*任务栈地址赋值给ebx*/
+		/*esp指向任务堆栈*/
+		/*恢复所有通用寄存器*/
+		/*恢复标志寄存器*/
+		/*在堆栈中取出任务地址并开始任务*/
+	}
+}

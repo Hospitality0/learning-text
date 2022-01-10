@@ -110,9 +110,9 @@ extern "C" {
 #define  OS_STAT_SUSPEND             0x08u  /*，任务挂起*/																/* Task is suspended                                       */
 #define  OS_STAT_MUTEX               0x10u  /*，任务等待互斥信号量*/													/* Pending on mutual exclusion semaphore                   */
 #define  OS_STAT_FLAG                0x20u  /*，任务等待事件标志*/														/* Pending on event flag group                             */
-#define  OS_STAT_MULTI               0x80u  /* Pending on multiple events                              */
+#define  OS_STAT_MULTI               0x80u  /*，等待多事件*/																/* Pending on multiple events                              */
 
-#define  OS_STAT_PEND_ANY         (OS_STAT_SEM | OS_STAT_MBOX | OS_STAT_Q | OS_STAT_MUTEX | OS_STAT_FLAG)
+#define  OS_STAT_PEND_ANY                   /*等待时间结合体*/(OS_STAT_SEM | OS_STAT_MBOX | OS_STAT_Q | OS_STAT_MUTEX | OS_STAT_FLAG)
 
 /*
 *********************************************************************************************************
@@ -529,9 +529,9 @@ typedef struct os_stk_data {
 
 
 /*任务控制块*/
-typedef struct os_tcb {
+typedef struct os_tcb 
+{
     OS_STK          *OSTCBStkPtr;           /*任务堆栈指针，指向任务栈的栈顶指针*/	
-
 #if OS_TASK_CREATE_EXT_EN > 0u				/*是否配置扩展功能*/
     void            *OSTCBExtPtr;           /*扩展块的指针*/
     OS_STK          *OSTCBStkBottom;        /*任务堆栈的栈底地址*/
@@ -559,8 +559,10 @@ typedef struct os_tcb {
 #endif
     OS_FLAGS         OSTCBFlagsRdy;         /*事件标志*/
 #endif
-    INT32U           OSTCBDly;              /*任务延时事件*/
-    INT8U            OSTCBStat;             /*任务状态    = 0x00就是就绪态*/
+    INT32U           OSTCBDly;              /*任务延时*/
+    INT8U            OSTCBStat;             /*任务状态标志位    = 0x00就是就绪态*/
+	/*7           6     5               4               3     2         1         0*/
+	/*请求多事件，未用，请求事件标志组，请求互斥信号量，挂起，请求队列，请求邮箱，请求信号量*/
     INT8U            OSTCBStatPend;         /*时间等待标志*/
     INT8U            OSTCBPrio;             /*任务优先级*/
 	/*这四个都和就绪表相关，表示任务优先级*/
@@ -589,8 +591,6 @@ typedef struct os_tcb {
     INT32U           OSTCBRegTbl[OS_TASK_REG_TBL_SIZE];/*任务注册表*/
 #endif
 } OS_TCB;
-
-/*$PAGE*/
 /*
 ************************************************************************************************************************
 *                                                   TIMER DATA TYPES
@@ -649,28 +649,28 @@ OS_EXT  OS_FLAG_GRP      *OSFlagFreeList;           /* Pointer to free list of e
 #endif
 
 #if OS_TASK_STAT_EN > 0u
-OS_EXT  INT8U             OSCPUUsage;               /* Percentage of CPU used                          */
-OS_EXT  INT32U            OSIdleCtrMax;             /*最大空闲计数值*//* Max. value that idle ctr can take in 1 sec.     */
-OS_EXT  INT32U            OSIdleCtrRun;             /*1秒内空闲计数值*//* Val. reached by idle ctr at run time in 1 sec.  */
-OS_EXT  BOOLEAN           OSStatRdy;                /*统计任务准备状态*//* Flag indicating that the statistic task is rdy  */
-OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /*统计任务栈*//* Statistics task stack          */
+OS_EXT  INT8U             OSCPUUsage;               /*CPU使用率*/						/* Percentage of CPU used                          */
+OS_EXT  INT32U            OSIdleCtrMax;             /*每一秒最大空闲计数值*/			/* Max. value that idle ctr can take in 1 sec.     */
+OS_EXT  INT32U            OSIdleCtrRun;             /*1秒内空闲计数值*/					/* Val. reached by idle ctr at run time in 1 sec.  */
+OS_EXT  BOOLEAN           OSStatRdy;                /*统计任务准备状态*/				/* Flag indicating that the statistic task is rdy  */
+OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /*统计任务栈*/		/* Statistics task stack          */
 #endif
 
-OS_EXT  INT8U             OSIntNesting;             /*中断嵌套计数*//* Interrupt nesting level                         */
+OS_EXT  INT8U             OSIntNesting;             /*中断嵌套计数*/					/* Interrupt nesting level                         */
 
-OS_EXT  INT8U             OSLockNesting;            /*调度锁计数*//* Multitasking lock nesting level                 */
+OS_EXT  INT8U             OSLockNesting;            /*调度锁计数*/						/* Multitasking lock nesting level                 */
 
-OS_EXT  INT8U             OSPrioCur;                /*当前任务优先级*//* Priority of current task                        */
-OS_EXT  INT8U             OSPrioHighRdy;            /*运行任务的最高优先级*//* Priority of highest priority task               */
+OS_EXT  INT8U             OSPrioCur;                /*当前任务优先级*/					/* Priority of current task                        */
+OS_EXT  INT8U             OSPrioHighRdy;            /*运行任务的最高优先级*/			/* Priority of highest priority task               */
 
 OS_EXT  OS_PRIO           OSRdyGrp;                        /*任务就绪组*/
 OS_EXT  OS_PRIO           OSRdyTbl[OS_RDY_TBL_SIZE];       /*任务就绪表*/
 
-OS_EXT  BOOLEAN           OSRunning;                       /* Flag indicating that kernel is running   */
+OS_EXT  BOOLEAN           OSRunning;                       /*是否启动多任务*/			/* Flag indicating that kernel is running   */
 
-OS_EXT  INT8U             OSTaskCtr;                       /*当前任务数*//* Number of tasks created                  */
+OS_EXT  INT8U             OSTaskCtr;                       /*当前任务数*/				/* Number of tasks created                  */
 
-OS_EXT  volatile  INT32U  OSIdleCtr;                       /*空闲计数器*//* Idle counter                   */
+OS_EXT  volatile  INT32U  OSIdleCtr;                       /*空闲计数器*/				/* Idle counter                   */
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
 OS_EXT  BOOLEAN           OSSafetyCriticalStartFlag;
@@ -700,7 +700,7 @@ OS_EXT  OS_Q              OSQTbl[OS_MAX_QS];        /* Table of QUEUE control bl
 #endif
 
 #if OS_TIME_GET_SET_EN > 0u
-OS_EXT  volatile  INT32U  OSTime;                   /*当前系统时间*//* Current value of system time (in ticks)         */
+OS_EXT  volatile  INT32U  OSTime;                   /*调度计数器*//*当前系统时间*//* Current value of system time (in ticks)         */
 #endif
 
 #if OS_TMR_EN > 0u
@@ -1248,7 +1248,7 @@ void          OS_MemInit              (void);
 void          OS_QInit                (void);
 #endif
 
-void          OS_Sched                (void);
+void          OS_Sched                (void);							/*任务调度*/
 
 #if (OS_EVENT_NAME_EN > 0u) || (OS_FLAG_NAME_EN > 0u) || (OS_MEM_NAME_EN > 0u) || (OS_TASK_NAME_EN > 0u)
 INT8U         OS_StrLen               (INT8U           *psrc);
