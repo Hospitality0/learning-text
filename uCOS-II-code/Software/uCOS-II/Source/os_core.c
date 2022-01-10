@@ -853,8 +853,9 @@ void  OSStart (void)
 */
 
 #if OS_TASK_STAT_EN > 0u
-/*统计任务的初始化，获取系统空闲计数的最大值*/
-/*该函数在用户任务中被调用，这函数在一直过程中命名为TaskStart，优先级是0*/
+/*统计任务的初始化*/
+/*目的是获取系统空闲计数的最大值,该函数在用户任务中被调用，这函数在一直过程中命名为TaskStart，优先级是0，在一直部分可以看到*/
+/*这是系统没有运行其他任务，统计任务初始化函数将自己阻塞2个时钟周期，在系统时钟中断2次后，有调度器恢复运行，叫做时钟同步*/
 void  OSStatInit (void)
 {
 #if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
@@ -864,7 +865,7 @@ void  OSStatInit (void)
     OS_ENTER_CRITICAL();
     OSIdleCtr    = 0uL;							/*空闲计数器清0*/
     OS_EXIT_CRITICAL();
-    OSTimeDly(OS_TICKS_PER_SEC / 10u);			/*延时100ms*/
+    OSTimeDly(OS_TICKS_PER_SEC / 10u);			/*延时100ms，此时空闲任务一直OSIdleCtr++*/
     OS_ENTER_CRITICAL();
     OSIdleCtrMax = OSIdleCtr;					/*获取最大空闲计数值*/
     OSStatRdy    = OS_TRUE;						/*统计任务准备状态OK*/
@@ -1785,23 +1786,23 @@ void  OS_TaskIdle (void *p_arg)
 */
 
 #if OS_TASK_STAT_EN > 0u
-/*统计任务*/
+/*统计任务代码*/
 void  OS_TaskStat (void *p_arg)
 {
-#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
+#if OS_CRITICAL_METHOD == 3u						/* Allocate storage for CPU status register           */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-    p_arg = p_arg;                               /* Prevent compiler warning for not using 'p_arg'     */
-    while (OSStatRdy == OS_FALSE)
+    p_arg = p_arg;									/*防止编译报错*/
+    while (OSStatRdy == OS_FALSE)					/*统计任务没准备好*/
 	{
-        OSTimeDly(2u * OS_TICKS_PER_SEC / 10u);  /* Wait until statistic task is ready                 */
+        OSTimeDly(2u * OS_TICKS_PER_SEC / 10u);		/*延时0.2s，等她准备好*/
     }
     OSIdleCtrMax /= 100uL;
-    if (OSIdleCtrMax == 0uL)
+    if (OSIdleCtrMax == 0uL)						/*计数太少了，证明系统比较忙*/
 	{
         OSCPUUsage = 0u;
 #if OS_TASK_SUSPEND_EN > 0u
-        (void)OSTaskSuspend(OS_PRIO_SELF);
+        (void)OSTaskSuspend(OS_PRIO_SELF);			/*挂起自己*/
 #else
         for (;;)
 		{
@@ -1809,21 +1810,21 @@ void  OS_TaskStat (void *p_arg)
         }
 #endif
     }
-    for (;;) {
+    for (;;)
+	{
         OS_ENTER_CRITICAL();
-        OSIdleCtrRun = OSIdleCtr;                /* Obtain the of the idle counter for the past second */
-        OSIdleCtr    = 0uL;                      /* Reset the idle counter for the next second         */
+        OSIdleCtrRun = OSIdleCtr;					/*获取过去100ms的空闲计数*/
+        OSIdleCtr    = 0uL;							/*清空闲计数*/
         OS_EXIT_CRITICAL();
         OSCPUUsage   = (INT8U)(100uL - OSIdleCtrRun / OSIdleCtrMax);
-        OSTaskStatHook();                        /* Invoke user definable hook                         */
+        OSTaskStatHook();							/*钩子函数*/
 #if (OS_TASK_STAT_STK_CHK_EN > 0u) && (OS_TASK_CREATE_EXT_EN > 0u)
-        OS_TaskStatStkChk();                     /* Check the stacks for each task                     */
+        OS_TaskStatStkChk();						/*堆栈检查*/
 #endif
-        OSTimeDly(OS_TICKS_PER_SEC / 10u);       /* Accumulate OSIdleCtr for the next 1/10 second      */
+        OSTimeDly(OS_TICKS_PER_SEC / 10u);			/*延时0.1s，为了下一个100ms累计OSIdleCtr*/
     }
 }
 #endif
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                      CHECK ALL TASK STACKS
@@ -1837,6 +1838,7 @@ void  OS_TaskStat (void *p_arg)
 */
 
 #if (OS_TASK_STAT_STK_CHK_EN > 0u) && (OS_TASK_CREATE_EXT_EN > 0u)
+/*堆栈检查*/
 void  OS_TaskStatStkChk (void)
 {
     OS_TCB      *ptcb;

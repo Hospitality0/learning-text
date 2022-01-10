@@ -650,7 +650,7 @@ OS_EXT  OS_FLAG_GRP      *OSFlagFreeList;           /* Pointer to free list of e
 
 #if OS_TASK_STAT_EN > 0u
 OS_EXT  INT8U             OSCPUUsage;               /*CPU使用率*/						/* Percentage of CPU used                          */
-OS_EXT  INT32U            OSIdleCtrMax;             /*每一秒最大空闲计数值*/			/* Max. value that idle ctr can take in 1 sec.     */
+OS_EXT  INT32U            OSIdleCtrMax;             /*最大空闲计数值*/					/* Max. value that idle ctr can take in 1 sec.     */
 OS_EXT  INT32U            OSIdleCtrRun;             /*1秒内空闲计数值*/					/* Val. reached by idle ctr at run time in 1 sec.  */
 OS_EXT  BOOLEAN           OSStatRdy;                /*统计任务准备状态*/				/* Flag indicating that the statistic task is rdy  */
 OS_EXT  OS_STK            OSTaskStatStk[OS_TASK_STAT_STK_SIZE];      /*统计任务栈*/		/* Statistics task stack          */
@@ -670,7 +670,7 @@ OS_EXT  BOOLEAN           OSRunning;                       /*是否启动多任务*/			
 
 OS_EXT  INT8U             OSTaskCtr;                       /*当前任务数*/				/* Number of tasks created                  */
 
-OS_EXT  volatile  INT32U  OSIdleCtr;                       /*空闲计数器*/				/* Idle counter                   */
+OS_EXT  volatile  INT32U  OSIdleCtr;                       /*空闲计数器，在空闲任务中一直++*/				/* Idle counter                   */
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
 OS_EXT  BOOLEAN           OSSafetyCriticalStartFlag;
@@ -1191,7 +1191,7 @@ void          OSSchedUnlock           (void);
 
 void          OSStart                 (void);
 
-void          OSStatInit              (void);
+void          OSStatInit              (void);							/*统计任务初始化*/
 
 INT16U        OSVersion               (void);
 
@@ -1254,12 +1254,12 @@ void          OS_Sched                (void);							/*任务调度*/
 INT8U         OS_StrLen               (INT8U           *psrc);
 #endif
 
-void          OS_TaskIdle             (void            *p_arg);
+void          OS_TaskIdle             (void            *p_arg);			/*空闲任务代码*/
 
 void          OS_TaskReturn           (void);
 
 #if OS_TASK_STAT_EN > 0u
-void          OS_TaskStat             (void            *p_arg);
+void          OS_TaskStat             (void            *p_arg);			/*统计任务代码*/
 #endif
 
 #if (OS_TASK_STAT_STK_CHK_EN > 0u) && (OS_TASK_CREATE_EXT_EN > 0u)
