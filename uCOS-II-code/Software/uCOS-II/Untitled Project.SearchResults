@@ -1,2 +1,12 @@
----- TaskStart Matches (1 in 1 files) ----
-Os_core.c (source):/*目的是获取系统空闲计数的最大值,该函数在用户任务中被调用，这函数在一直过程中命名为TaskStart，优先级是0，在一直部分可以看到*/
+---- OS_TICKS_PER_SEC Matches (12 in 6 files) ----
+Os_cfg_r.h (source):#define OS_TICKS_PER_SEC        100u   /*每秒时钟中断发生的次数*//* Set the number of ticks in one second                        */
+Os_core.c (source):    OSTimeDly(OS_TICKS_PER_SEC / 10u);			/*延时100ms，此时空闲任务一直OSIdleCtr++*/
+Os_core.c (source):        OSTimeDly(2u * OS_TICKS_PER_SEC / 10u);		/*延时0.2s，等她准备好*/
+Os_core.c (source):            OSTimeDly(OS_TICKS_PER_SEC);
+Os_core.c (source):        OSTimeDly(OS_TICKS_PER_SEC / 10u);			/*延时0.1s，为了下一个100ms累计OSIdleCtr*/
+Os_dbg_r.c (source):INT16U  const  OSTicksPerSec       = OS_TICKS_PER_SEC;
+Os_task.c (source):        OSTimeDly(OS_TICKS_PER_SEC);
+Os_time.c (source):    ticks = ((INT32U)hours * 3600uL + (INT32U)minutes * 60uL + (INT32U)seconds) * OS_TICKS_PER_SEC
+Os_time.c (source):          + OS_TICKS_PER_SEC * ((INT32U)ms + 500uL / OS_TICKS_PER_SEC) / 1000uL;
+Ucos_ii.h (source):#ifndef OS_TICKS_PER_SEC
+Ucos_ii.h (source):#error  "OS_CFG.H, Missing OS_TICKS_PER_SEC: Sets the number of ticks in one second"

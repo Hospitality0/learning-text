@@ -559,7 +559,7 @@ typedef struct os_tcb
 #endif
     OS_FLAGS         OSTCBFlagsRdy;         /*事件标志*/
 #endif
-    INT32U           OSTCBDly;              /*任务延时*/
+    INT32U           OSTCBDly;              /*任务延时时间*/
     INT8U            OSTCBStat;             /*任务状态标志位    = 0x00就是就绪态*/
 	/*7           6     5               4               3     2         1         0*/
 	/*请求多事件，未用，请求事件标志组，请求互斥信号量，挂起，请求队列，请求邮箱，请求信号量*/
@@ -700,7 +700,7 @@ OS_EXT  OS_Q              OSQTbl[OS_MAX_QS];        /* Table of QUEUE control bl
 #endif
 
 #if OS_TIME_GET_SET_EN > 0u
-OS_EXT  volatile  INT32U  OSTime;                   /*调度计数器*//*当前系统时间*//* Current value of system time (in ticks)         */
+OS_EXT  volatile  INT32U  OSTime;                   /*当前系统时间，调度计数器*//* Current value of system time (in ticks)         */
 #endif
 
 #if OS_TMR_EN > 0u

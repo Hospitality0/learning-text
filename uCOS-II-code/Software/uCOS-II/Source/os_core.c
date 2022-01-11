@@ -629,9 +629,11 @@ void  OSInit (void)
 
 void  OSIntEnter (void)
 {
-    if (OSRunning == OS_TRUE) {
-        if (OSIntNesting < 255u) {
-            OSIntNesting++;                      /* Increment ISR nesting level                        */
+    if (OSRunning == OS_TRUE)
+	{
+        if (OSIntNesting < 255u)
+		{
+            OSIntNesting++;/*中断嵌套数+1*/
         }
     }
 }
@@ -2028,7 +2030,8 @@ INT8U  OS_TCBInit (INT8U    prio,		/*被创建任务的优先级*/
     return (OS_ERR_TASK_NO_MORE_TCB);
 }
 
-
+/*自定义区*/
+INT8U FlagEn;
 
 
 
@@ -2086,3 +2089,21 @@ void OSStartHighRdy(void)/*启动多任务*/
 		/*在堆栈中取出任务地址并开始任务*/
 	}
 }
+
+/*时钟中断服务函数*/
+void OSTickISRuser()
+{
+	OSTime++;
+	if(!FlagEn)/*当前中断被屏蔽或者处于临界区*/
+	{
+		return;
+	}
+	SuspendThread(mainhandle);/*中止主线程运行，模拟中断产生*/
+	GetThreadContext(mainhandle,&Context);/*获取主线程的上下文*/
+	OSIntEnter();/*嵌套数+1*/
+	OSTCBCur->OSTCBStkPtr = (OS_STK *)Context.Esp;/*把当前任务的堆栈地址存到任务控制块*/
+	OSTimeTick();/*找到优先级最高的任务*/
+	OSIntExit();/*嵌套数-1*/
+	ResumeThread(mainhandle);/*主线程继续执行，模拟中断返回*/
+}
+
