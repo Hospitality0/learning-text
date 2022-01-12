@@ -128,12 +128,12 @@ extern "C" {
 *                                        OS_EVENT types
 *********************************************************************************************************
 */
-#define  OS_EVENT_TYPE_UNUSED           0u
-#define  OS_EVENT_TYPE_MBOX             1u
-#define  OS_EVENT_TYPE_Q                2u
-#define  OS_EVENT_TYPE_SEM              3u
-#define  OS_EVENT_TYPE_MUTEX            4u
-#define  OS_EVENT_TYPE_FLAG             5u
+#define  OS_EVENT_TYPE_UNUSED           0u/*未使用*/
+#define  OS_EVENT_TYPE_MBOX             1u/*消息邮箱*/
+#define  OS_EVENT_TYPE_Q                2u/*消息队列*/
+#define  OS_EVENT_TYPE_SEM              3u/*信号量*/
+#define  OS_EVENT_TYPE_MUTEX            4u/*互斥信号量*/
+#define  OS_EVENT_TYPE_FLAG             5u/*事件标志组*/
 
 #define  OS_TMR_TYPE                  100u  /* Used to identify Timers ...                             */
                                             /* ... (Must be different value than OS_EVENT_TYPE_xxx)    */
@@ -346,21 +346,24 @@ extern "C" {
 */
 
 #if OS_LOWEST_PRIO <= 63u
-typedef  INT8U    OS_PRIO;
+typedef  INT8U    OS_PRIO;/*事件等待组和等待表的大小，和任务数量相关*/
 #else
 typedef  INT16U   OS_PRIO;
 #endif
 
-#if (OS_EVENT_EN) && (OS_MAX_EVENTS > 0u)
-typedef struct os_event {
-    INT8U    OSEventType;                    /* Type of event control block (see OS_EVENT_TYPE_xxxx)    */
-    void    *OSEventPtr;                     /* Pointer to message or queue structure                   */
-    INT16U   OSEventCnt;                     /* Semaphore Count (not used if other EVENT type)          */
-    OS_PRIO  OSEventGrp;                     /* Group corresponding to tasks waiting for event to occur */
-    OS_PRIO  OSEventTbl[OS_EVENT_TBL_SIZE];  /* List of tasks waiting for event to occur                */
 
+/*事件控制块ECB*/
+#if (OS_EVENT_EN) && (OS_MAX_EVENTS > 0u)
+typedef struct os_event
+{
+    INT8U    OSEventType;							/*事件控制块的类型*/
+    void    *OSEventPtr;							/*指向下一个ECB*/
+    INT16U   OSEventCnt;							/*信号量计数值，除了信号量其他的事件无效*/
+    OS_PRIO  OSEventGrp;							/*事件等待组*/
+    OS_PRIO  OSEventTbl[OS_EVENT_TBL_SIZE];			/*等待事件的任务表*/
+													/*事件等待表和事件等待组和任务的类似，但是任务的是独立的，事件的在控制块里*/
 #if OS_EVENT_NAME_EN > 0u
-    INT8U   *OSEventName;
+    INT8U   *OSEventName;							/*事件名称*/
 #endif
 } OS_EVENT;
 #endif
@@ -639,8 +642,8 @@ typedef  struct  os_tmr_wheel {
 OS_EXT  INT32U            OSCtxSwCtr;               /*任务切换次数*//* Counter of number of context switches           */
 
 #if (OS_EVENT_EN) && (OS_MAX_EVENTS > 0u)
-OS_EXT  OS_EVENT         *OSEventFreeList;          /* Pointer to list of free EVENT control blocks    */
-OS_EXT  OS_EVENT          OSEventTbl[OS_MAX_EVENTS];/* Table of EVENT control blocks                   */
+OS_EXT  OS_EVENT         *OSEventFreeList;          /*事件空闲链表指针*//* Pointer to list of free EVENT control blocks    */
+OS_EXT  OS_EVENT          OSEventTbl[OS_MAX_EVENTS];/*事件控制块的实体*//* Table of EVENT control blocks                   */
 #endif
 
 #if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)

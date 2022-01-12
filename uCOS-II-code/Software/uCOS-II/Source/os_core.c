@@ -1030,11 +1030,12 @@ void  OS_Dummy (void)
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
+/*将等待事件的任务就绪*/
 #if (OS_EVENT_EN)
-INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,
-                        void      *pmsg,
-                        INT8U      msk,
-                        INT8U      pend_stat)
+INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,/*ECB的指针*/
+                        void      *pmsg,/*消息指针*/
+                        INT8U      msk,/*清除状态位的掩码*/
+                        INT8U      pend_stat)/*等待(pend)结束*/
 {
     OS_TCB   *ptcb;
     INT8U     y;
@@ -1105,25 +1106,22 @@ INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
+/*设置事件等待函数，将任务在ECB中登记的函数*/
 #if (OS_EVENT_EN)
 void  OS_EventTaskWait (OS_EVENT *pevent)
 {
     INT8U  y;
-
-
-    OSTCBCur->OSTCBEventPtr               = pevent;                 /* Store ptr to ECB in TCB         */
-
-    pevent->OSEventTbl[OSTCBCur->OSTCBY] |= OSTCBCur->OSTCBBitX;    /* Put task in waiting list        */
-    pevent->OSEventGrp                   |= OSTCBCur->OSTCBBitY;
-
-    y             =  OSTCBCur->OSTCBY;            /* Task no longer ready                              */
+    OSTCBCur->OSTCBEventPtr               = pevent;						/*让任务控制块的指针指向事件控制块，这样就可以直接调用TCB来控制ECB了*/
+    pevent->OSEventTbl[OSTCBCur->OSTCBY] |= OSTCBCur->OSTCBBitX;		/*ECB等待表中添加任务优先级编号*/
+    pevent->OSEventGrp                   |= OSTCBCur->OSTCBBitY;		/*ECB等待组中添加任务优先级编号*/
+    y             =  OSTCBCur->OSTCBY;									/*任务等待事件后需要阻塞当前任务，处理一下就绪表和就绪组*/
     OSRdyTbl[y]  &= (OS_PRIO)~OSTCBCur->OSTCBBitX;
-    if (OSRdyTbl[y] == 0u) {                      /* Clear event grp bit if this was only task pending */
+    if (OSRdyTbl[y] == 0u)
+	{
         OSRdyGrp &= (OS_PRIO)~OSTCBCur->OSTCBBitY;
     }
 }
 #endif
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                          MAKE TASK WAIT FOR ANY OF MULTIPLE EVENTS TO OCCUR
@@ -1182,21 +1180,20 @@ void  OS_EventTaskWaitMulti (OS_EVENT **pevents_wait)
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
+/*取消等待时间的表和组*/
 #if (OS_EVENT_EN)
 void  OS_EventTaskRemove (OS_TCB   *ptcb,
                           OS_EVENT *pevent)
 {
     INT8U  y;
-
-
     y                       =  ptcb->OSTCBY;
-    pevent->OSEventTbl[y]  &= (OS_PRIO)~ptcb->OSTCBBitX;    /* Remove task from wait list              */
-    if (pevent->OSEventTbl[y] == 0u) {
-        pevent->OSEventGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
+    pevent->OSEventTbl[y]  &= (OS_PRIO)~ptcb->OSTCBBitX;/*处理事件等待表*/
+    if (pevent->OSEventTbl[y] == 0u)
+	{
+        pevent->OSEventGrp &= (OS_PRIO)~ptcb->OSTCBBitY;/*处理事件等待组*/
     }
 }
 #endif
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                             REMOVE TASK FROM MULTIPLE EVENTS WAIT LISTS
@@ -1252,14 +1249,14 @@ void  OS_EventTaskRemoveMulti (OS_TCB    *ptcb,
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
+/*事件等待表初始化*/
 #if (OS_EVENT_EN)
 void  OS_EventWaitListInit (OS_EVENT *pevent)
 {
     INT8U  i;
-
-
-    pevent->OSEventGrp = 0u;                     /* No task waiting on event                           */
-    for (i = 0u; i < OS_EVENT_TBL_SIZE; i++) {
+    pevent->OSEventGrp = 0u;						/*清事件等待组*/
+    for (i = 0u; i < OS_EVENT_TBL_SIZE; i++)		/*清事件等待表*/
+	{
         pevent->OSEventTbl[i] = 0u;
     }
 }
@@ -1286,32 +1283,31 @@ static  void  OS_InitEventList (void)
     INT16U     ix_next;
     OS_EVENT  *pevent1;
     OS_EVENT  *pevent2;
-
-
-    OS_MemClr((INT8U *)&OSEventTbl[0], sizeof(OSEventTbl)); /* Clear the event table                   */
-    for (ix = 0u; ix < (OS_MAX_EVENTS - 1u); ix++) {        /* Init. list of free EVENT control blocks */
+    OS_MemClr((INT8U *)&OSEventTbl[0], sizeof(OSEventTbl));		/*清空所有的事件控制块*/
+    for (ix = 0u; ix < (OS_MAX_EVENTS - 1u); ix++)				/*初始化ECB，空闲链表连上*/
+	{
         ix_next = ix + 1u;
         pevent1 = &OSEventTbl[ix];
         pevent2 = &OSEventTbl[ix_next];
         pevent1->OSEventType    = OS_EVENT_TYPE_UNUSED;
         pevent1->OSEventPtr     = pevent2;
 #if OS_EVENT_NAME_EN > 0u
-        pevent1->OSEventName    = (INT8U *)(void *)"?";     /* Unknown name                            */
+        pevent1->OSEventName    = (INT8U *)(void *)"?";
 #endif
     }
-    pevent1                         = &OSEventTbl[ix];
-    pevent1->OSEventType            = OS_EVENT_TYPE_UNUSED;
-    pevent1->OSEventPtr             = (OS_EVENT *)0;
+    pevent1                         = &OSEventTbl[ix];			/*最后一个ECB赋值*/
+    pevent1->OSEventType            = OS_EVENT_TYPE_UNUSED;		/*最后一个ECB赋值*/
+    pevent1->OSEventPtr             = (OS_EVENT *)0;			/*最后一个ECB赋值*/
 #if OS_EVENT_NAME_EN > 0u
-    pevent1->OSEventName            = (INT8U *)(void *)"?"; /* Unknown name                            */
+    pevent1->OSEventName            = (INT8U *)(void *)"?";		/*最后一个ECB赋值*/
 #endif
-    OSEventFreeList                 = &OSEventTbl[0];
+    OSEventFreeList                 = &OSEventTbl[0];			/*空闲指针指向表头*/
 #else
-    OSEventFreeList                 = &OSEventTbl[0];       /* Only have ONE event control block       */
+    OSEventFreeList                 = &OSEventTbl[0];
     OSEventFreeList->OSEventType    = OS_EVENT_TYPE_UNUSED;
     OSEventFreeList->OSEventPtr     = (OS_EVENT *)0;
 #if OS_EVENT_NAME_EN > 0u
-    OSEventFreeList->OSEventName    = (INT8U *)"?";         /* Unknown name                            */
+    OSEventFreeList->OSEventName    = (INT8U *)"?";
 #endif
 #endif
 #endif
