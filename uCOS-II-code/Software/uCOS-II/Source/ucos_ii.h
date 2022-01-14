@@ -119,9 +119,9 @@ extern "C" {
 *                           TASK PEND STATUS (Status codes for OSTCBStatPend)
 *********************************************************************************************************
 */
-#define  OS_STAT_PEND_OK                0u  /* Pending status OK, not pending, or pending complete     */
-#define  OS_STAT_PEND_TO                1u  /* Pending timed out                                       */
-#define  OS_STAT_PEND_ABORT             2u  /* Pending aborted                                         */
+#define  OS_STAT_PEND_OK                0u/*事件发生了*/
+#define  OS_STAT_PEND_TO                1u/*事件等待失败了*/
+#define  OS_STAT_PEND_ABORT             2u/*事件超时了*/
 
 /*
 *********************************************************************************************************
@@ -181,8 +181,8 @@ extern "C" {
 *       Possible values for 'opt' argument of OSSemDel(), OSMboxDel(), OSQDel() and OSMutexDel()
 *********************************************************************************************************
 */
-#define  OS_DEL_NO_PEND                 0u
-#define  OS_DEL_ALWAYS                  1u
+#define  OS_DEL_NO_PEND                 0u/*有任务等信号量就不能删除信号量*/
+#define  OS_DEL_ALWAYS                  1u/*强制删除信号量，不管有没有任务在等*/
 
 /*
 *********************************************************************************************************
@@ -566,7 +566,7 @@ typedef struct os_tcb
     INT8U            OSTCBStat;             /*任务状态标志位    = 0x00就是就绪态*/
 	/*7           6     5               4               3     2         1         0*/
 	/*请求多事件，未用，请求事件标志组，请求互斥信号量，挂起，请求队列，请求邮箱，请求信号量*/
-    INT8U            OSTCBStatPend;         /*时间等待标志*/
+    INT8U            OSTCBStatPend;         /*等待状态*//*时间等待标志*/
     INT8U            OSTCBPrio;             /*任务优先级*/
 	/*这四个都和就绪表相关，表示任务优先级*/
     INT8U            OSTCBX;				/*优先级在表中的第几列，任务优先级低3位*/

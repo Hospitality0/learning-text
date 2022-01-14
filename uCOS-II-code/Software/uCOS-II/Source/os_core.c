@@ -1032,10 +1032,10 @@ void  OS_Dummy (void)
 */
 /*将等待事件的任务就绪*/
 #if (OS_EVENT_EN)
-INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,/*ECB的指针*/
-                        void      *pmsg,/*消息指针*/
-                        INT8U      msk,/*清除状态位的掩码*/
-                        INT8U      pend_stat)/*等待(pend)结束*/
+INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,				/*ECB的指针*/
+                        void      *pmsg,				/*消息指针*/
+                        INT8U      msk,					/*清除状态位的掩码*/
+                        INT8U      pend_stat)			/*等待(pend)结束*/
 {
     OS_TCB   *ptcb;
     INT8U     y;
@@ -1044,50 +1044,53 @@ INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,/*ECB的指针*/
 #if OS_LOWEST_PRIO > 63u
     OS_PRIO  *ptbl;
 #endif
-
-
 #if OS_LOWEST_PRIO <= 63u
-    y    = OSUnMapTbl[pevent->OSEventGrp];              /* Find HPT waiting for message                */
+    y    = OSUnMapTbl[pevent->OSEventGrp];
     x    = OSUnMapTbl[pevent->OSEventTbl[y]];
-    prio = (INT8U)((y << 3u) + x);                      /* Find priority of task getting the msg       */
+    prio = (INT8U)((y << 3u) + x);						/*根据事件等待组和表，找到正在等待事件的任务中最高优先级的*/
 #else
-    if ((pevent->OSEventGrp & 0xFFu) != 0u) {           /* Find HPT waiting for message                */
+    if((pevent->OSEventGrp & 0xFFu) != 0u)				/* Find HPT waiting for message*/
+	{
         y = OSUnMapTbl[ pevent->OSEventGrp & 0xFFu];
-    } else {
+    }
+	else
+    {
         y = OSUnMapTbl[(OS_PRIO)(pevent->OSEventGrp >> 8u) & 0xFFu] + 8u;
     }
     ptbl = &pevent->OSEventTbl[y];
-    if ((*ptbl & 0xFFu) != 0u) {
+    if((*ptbl & 0xFFu) != 0u)
+	{
         x = OSUnMapTbl[*ptbl & 0xFFu];
-    } else {
+    }
+	else
+	{
         x = OSUnMapTbl[(OS_PRIO)(*ptbl >> 8u) & 0xFFu] + 8u;
     }
-    prio = (INT8U)((y << 4u) + x);                      /* Find priority of task getting the msg       */
+    prio = (INT8U)((y << 4u) + x);						/* Find priority of task getting the msg       */
 #endif
-
-    ptcb                  =  OSTCBPrioTbl[prio];        /* Point to this task's OS_TCB                 */
-    ptcb->OSTCBDly        =  0u;                        /* Prevent OSTimeTick() from readying task     */
+    ptcb                  =  OSTCBPrioTbl[prio];		/*找到任务控制块*/
+    ptcb->OSTCBDly        =  0u;						/*延时时间清0，如果不是0每个时钟周期会--，会产生冲突*/
 #if ((OS_Q_EN > 0u) && (OS_MAX_QS > 0u)) || (OS_MBOX_EN > 0u)
-    ptcb->OSTCBMsg        =  pmsg;                      /* Send message directly to waiting task       */
+    ptcb->OSTCBMsg        =  pmsg;						/*TCB中指针指向ECB*/
 #else
-    pmsg                  =  pmsg;                      /* Prevent compiler warning if not used        */
+    pmsg                  =  pmsg;
 #endif
-    ptcb->OSTCBStat      &= (INT8U)~msk;                /* Clear bit associated with event type        */
-    ptcb->OSTCBStatPend   =  pend_stat;                 /* Set pend status of post or abort            */
+    ptcb->OSTCBStat      &= (INT8U)~msk;				/*清除任务控制块的任务状态标志*/
+    ptcb->OSTCBStatPend   =  pend_stat;					/*设置等待状态*/
                                                         /* See if task is ready (could be susp'd)      */
-    if ((ptcb->OSTCBStat &   OS_STAT_SUSPEND) == OS_STAT_RDY) {
-        OSRdyGrp         |=  ptcb->OSTCBBitY;           /* Put task in the ready to run list           */
+    if ((ptcb->OSTCBStat &   OS_STAT_SUSPEND) == OS_STAT_RDY)			/*如果任务没有挂起*/
+	{
+        OSRdyGrp         |=  ptcb->OSTCBBitY;			/*把任务就绪了*/
         OSRdyTbl[y]      |=  ptcb->OSTCBBitX;
     }
-
-    OS_EventTaskRemove(ptcb, pevent);                   /* Remove this task from event   wait list     */
+    OS_EventTaskRemove(ptcb, pevent);					/*事件等待表和组中删除该任务*/
 #if (OS_EVENT_MULTI_EN > 0u)
-    if (ptcb->OSTCBEventMultiPtr != (OS_EVENT **)0) {   /* Remove this task from events' wait lists    */
+    if (ptcb->OSTCBEventMultiPtr != (OS_EVENT **)0)		/* Remove this task from events' wait lists    */
+	{
         OS_EventTaskRemoveMulti(ptcb, ptcb->OSTCBEventMultiPtr);
         ptcb->OSTCBEventPtr       = (OS_EVENT  *)pevent;/* Return event as first multi-pend event ready*/
     }
 #endif
-
     return (prio);
 }
 #endif
@@ -1106,7 +1109,7 @@ INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,/*ECB的指针*/
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-/*设置事件等待函数，将任务在ECB中登记的函数*/
+/*设置事件等待函数，将任务在ECB中登记的函数，把任务在就绪组表中取消*/
 #if (OS_EVENT_EN)
 void  OS_EventTaskWait (OS_EVENT *pevent)
 {
@@ -1180,7 +1183,8 @@ void  OS_EventTaskWaitMulti (OS_EVENT **pevents_wait)
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-/*取消等待时间的表和组*/
+/*在事件等待组和表中删除该任务*/
+/*取消等待事件的表和组*/
 #if (OS_EVENT_EN)
 void  OS_EventTaskRemove (OS_TCB   *ptcb,
                           OS_EVENT *pevent)

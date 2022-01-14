@@ -44,32 +44,32 @@
 *                         if you didn't pass a pointer to a semaphore
 *********************************************************************************************************
 */
-
+/*无等待的信号量*/
 #if OS_SEM_ACCEPT_EN > 0u
 INT16U  OSSemAccept (OS_EVENT *pevent)
 {
     INT16U     cnt;
-#if OS_CRITICAL_METHOD == 3u                          /* Allocate storage for CPU status register      */
+#if OS_CRITICAL_METHOD == 3u						/* Allocate storage for CPU status register      */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+    if(pevent == (OS_EVENT *)0)						/*ECB地址无效*/
+	{
         return (0u);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+    if(pevent->OSEventType != OS_EVENT_TYPE_SEM)	/*格式不是信号量*/
+	{
         return (0u);
     }
     OS_ENTER_CRITICAL();
     cnt = pevent->OSEventCnt;
-    if (cnt > 0u) {                                   /* See if resource is available                  */
-        pevent->OSEventCnt--;                         /* Yes, decrement semaphore and notify caller    */
+    if (cnt > 0u)									/*有信号量就--。没有拉倒*/
+	{
+        pevent->OSEventCnt--;
     }
     OS_EXIT_CRITICAL();
-    return (cnt);                                     /* Return semaphore count                        */
+    return (cnt);									/*返回信号量值*/
 }
 #endif
 
@@ -90,39 +90,39 @@ INT16U  OSSemAccept (OS_EVENT *pevent)
 *              == (void *)0  if no event control blocks were available
 *********************************************************************************************************
 */
-
+/*创建一个信号量*/
 OS_EVENT  *OSSemCreate (INT16U cnt)
 {
     OS_EVENT  *pevent;
-#if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
+#if OS_CRITICAL_METHOD == 3u/* Allocate storage for CPU status register */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #ifdef OS_SAFETY_CRITICAL_IEC61508
-    if (OSSafetyCriticalStartFlag == OS_TRUE) {
+    if (OSSafetyCriticalStartFlag == OS_TRUE)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
-
-    if (OSIntNesting > 0u) {                               /* See if called from ISR ...               */
-        return ((OS_EVENT *)0);                            /* ... can't CREATE from an ISR             */
+    if (OSIntNesting > 0u)												/*中断中不允许创建信号量*/
+	{
+        return ((OS_EVENT *)0);
     }
     OS_ENTER_CRITICAL();
-    pevent = OSEventFreeList;                              /* Get next free event control block        */
-    if (OSEventFreeList != (OS_EVENT *)0) {                /* See if pool of free ECB pool was empty   */
-        OSEventFreeList = (OS_EVENT *)OSEventFreeList->OSEventPtr;
+    pevent = OSEventFreeList;											/*获取一个ECB*/
+    if (OSEventFreeList != (OS_EVENT *)0)
+	{
+        OSEventFreeList = (OS_EVENT *)OSEventFreeList->OSEventPtr;		/*OSEventFreeList指向下一个*/
     }
     OS_EXIT_CRITICAL();
-    if (pevent != (OS_EVENT *)0) {                         /* Get an event control block               */
+    if (pevent != (OS_EVENT *)0)
+	{
         pevent->OSEventType    = OS_EVENT_TYPE_SEM;
-        pevent->OSEventCnt     = cnt;                      /* Set semaphore value                      */
-        pevent->OSEventPtr     = (void *)0;                /* Unlink from ECB free list                */
+        pevent->OSEventCnt     = cnt;
+        pevent->OSEventPtr     = (void *)0;
 #if OS_EVENT_NAME_EN > 0u
-        pevent->OSEventName    = (INT8U *)(void *)"?";
+        pevent->OSEventName    = (INT8U *)(void *)"?";					/*这四句，配置ECB*/
 #endif
-        OS_EventWaitListInit(pevent);                      /* Initialize to 'nobody waiting' on sem.   */
+        OS_EventWaitListInit(pevent);									/*清等待时间组表*/
     }
     return (pevent);
 }
@@ -164,86 +164,96 @@ OS_EVENT  *OSSemCreate (INT16U cnt)
 *                 will no longer be guarded by the semaphore.
 *********************************************************************************************************
 */
-
+/*删除一个信号量*/
 #if OS_SEM_DEL_EN > 0u
-OS_EVENT  *OSSemDel (OS_EVENT  *pevent,
-                     INT8U      opt,
-                     INT8U     *perr)
+OS_EVENT  *OSSemDel (OS_EVENT  *pevent,						/*ECB地址*/
+                     INT8U      opt,						/*删除选项*/
+                     INT8U     *perr)						/*返回值*/
 {
-    BOOLEAN    tasks_waiting;
+    BOOLEAN    tasks_waiting;								/*有没有任务在等信号量*/
     OS_EVENT  *pevent_return;
-#if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
+#if OS_CRITICAL_METHOD == 3u								/* Allocate storage for CPU status register */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #ifdef OS_SAFETY_CRITICAL
-    if (perr == (INT8U *)0) {
+    if (perr == (INT8U *)0)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
 
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                         /* Validate 'pevent'                        */
+    if (pevent == (OS_EVENT *)0)							/*如果ECB不存在*/
+	{
         *perr = OS_ERR_PEVENT_NULL;
         return (pevent);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {        /* Validate event block type                */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)			/*如果类型不符合*/
+	{
         *perr = OS_ERR_EVENT_TYPE;
         return (pevent);
     }
-    if (OSIntNesting > 0u) {                               /* See if called from ISR ...               */
-        *perr = OS_ERR_DEL_ISR;                            /* ... can't DELETE from an ISR             */
+    if (OSIntNesting > 0u)									/*如果在中断中*/
+	{
+        *perr = OS_ERR_DEL_ISR;
         return (pevent);
     }
     OS_ENTER_CRITICAL();
-    if (pevent->OSEventGrp != 0u) {                        /* See if any tasks waiting on semaphore    */
-        tasks_waiting = OS_TRUE;                           /* Yes                                      */
-    } else {
-        tasks_waiting = OS_FALSE;                          /* No                                       */
+    if (pevent->OSEventGrp != 0u)							/*等待组不是0，表示有任务在等这信号量*/
+	{
+        tasks_waiting = OS_TRUE;
     }
-    switch (opt) {
-        case OS_DEL_NO_PEND:                               /* Delete semaphore only if no task waiting */
-             if (tasks_waiting == OS_FALSE) {
+	else
+	{
+        tasks_waiting = OS_FALSE;
+    }
+    switch (opt)
+	{
+        case OS_DEL_NO_PEND:								/*有任务等信号量就不能删除的情况*/
+             if (tasks_waiting == OS_FALSE)
+			 {
 #if OS_EVENT_NAME_EN > 0u
                  pevent->OSEventName    = (INT8U *)(void *)"?";
 #endif
                  pevent->OSEventType    = OS_EVENT_TYPE_UNUSED;
-                 pevent->OSEventPtr     = OSEventFreeList; /* Return Event Control Block to free list  */
+                 pevent->OSEventPtr     = OSEventFreeList;
                  pevent->OSEventCnt     = 0u;
-                 OSEventFreeList        = pevent;          /* Get next free event control block        */
+                 OSEventFreeList        = pevent;			/*上面是删除信号量后配置的ECB*/
                  OS_EXIT_CRITICAL();
                  *perr                  = OS_ERR_NONE;
-                 pevent_return          = (OS_EVENT *)0;   /* Semaphore has been deleted               */
-             } else {
+                 pevent_return          = (OS_EVENT *)0;	/*删除成功返回空指针*/
+             }
+			 else
+			 {
                  OS_EXIT_CRITICAL();
                  *perr                  = OS_ERR_TASK_WAITING;
-                 pevent_return          = pevent;
+                 pevent_return          = pevent;			/*删除失败，返回当前ECB*/
              }
              break;
 
-        case OS_DEL_ALWAYS:                                /* Always delete the semaphore              */
-             while (pevent->OSEventGrp != 0u) {            /* Ready ALL tasks waiting for semaphore    */
-                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);
+        case OS_DEL_ALWAYS:									/*强制删除的情况*/
+             while (pevent->OSEventGrp != 0u)				/*有任务在等信号量*/
+			 {
+                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);		/*把等信号量的任务就绪*/
              }
 #if OS_EVENT_NAME_EN > 0u
              pevent->OSEventName    = (INT8U *)(void *)"?";
 #endif
              pevent->OSEventType    = OS_EVENT_TYPE_UNUSED;
-             pevent->OSEventPtr     = OSEventFreeList;     /* Return Event Control Block to free list  */
+             pevent->OSEventPtr     = OSEventFreeList;
              pevent->OSEventCnt     = 0u;
-             OSEventFreeList        = pevent;              /* Get next free event control block        */
+             OSEventFreeList        = pevent;				/*上面是删除信号量后配置的ECB*/
              OS_EXIT_CRITICAL();
-             if (tasks_waiting == OS_TRUE) {               /* Reschedule only if task(s) were waiting  */
-                 OS_Sched();                               /* Find highest priority task ready to run  */
+             if (tasks_waiting == OS_TRUE)					/*恢复任务后，有任务就绪了*/
+			 {
+                 OS_Sched();								/*调度一下*/
              }
              *perr                  = OS_ERR_NONE;
-             pevent_return          = (OS_EVENT *)0;       /* Semaphore has been deleted               */
+             pevent_return          = (OS_EVENT *)0;		/*删除成功返回空指针*/
              break;
 
-        default:
+        default:											/*传的删除选项opt无效*/
              OS_EXIT_CRITICAL();
              *perr                  = OS_ERR_INVALID_OPT;
              pevent_return          = pevent;
@@ -285,74 +295,76 @@ OS_EVENT  *OSSemDel (OS_EVENT  *pevent,
 * Returns    : none
 *********************************************************************************************************
 */
-/*$PAGE*/
-void  OSSemPend (OS_EVENT  *pevent,
-                 INT32U     timeout,
+/*请求一个信号量，等待一个信号量*/
+void  OSSemPend (OS_EVENT  *pevent,						/*ECB地址*/
+                 INT32U     timeout,					/*设定的超时时间*/
                  INT8U     *perr)
 {
-#if OS_CRITICAL_METHOD == 3u                          /* Allocate storage for CPU status register      */
+#if OS_CRITICAL_METHOD == 3u							/* Allocate storage for CPU status register      */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #ifdef OS_SAFETY_CRITICAL
-    if (perr == (INT8U *)0) {
+    if (perr == (INT8U *)0)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
-
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+    if (pevent == (OS_EVENT *)0)						/*ECB地址为空*/
+	{
         *perr = OS_ERR_PEVENT_NULL;
         return;
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)		/*类型无效*/
+	{
         *perr = OS_ERR_EVENT_TYPE;
         return;
     }
-    if (OSIntNesting > 0u) {                          /* See if called from ISR ...                    */
-        *perr = OS_ERR_PEND_ISR;                      /* ... can't PEND from an ISR                    */
+    if (OSIntNesting > 0u)								/*中断里不可以*/
+	{
+        *perr = OS_ERR_PEND_ISR;
         return;
     }
-    if (OSLockNesting > 0u) {                         /* See if called with scheduler locked ...       */
-        *perr = OS_ERR_PEND_LOCKED;                   /* ... can't PEND when locked                    */
+    if (OSLockNesting > 0u)								/*调度器上锁了*/
+	{
+        *perr = OS_ERR_PEND_LOCKED;
         return;
     }
     OS_ENTER_CRITICAL();
-    if (pevent->OSEventCnt > 0u) {                    /* If sem. is positive, resource available ...   */
-        pevent->OSEventCnt--;                         /* ... decrement semaphore only if positive.     */
+    if (pevent->OSEventCnt > 0u)						/*信号量的值必须大于0*/
+	{
+        pevent->OSEventCnt--;							/*拿走一个信号量*/
         OS_EXIT_CRITICAL();
         *perr = OS_ERR_NONE;
-        return;
+        return;											/*成功请求到信号量了*/
     }
-                                                      /* Otherwise, must wait until event occurs       */
-    OSTCBCur->OSTCBStat     |= OS_STAT_SEM;           /* Resource not available, pend on semaphore     */
-    OSTCBCur->OSTCBStatPend  = OS_STAT_PEND_OK;
-    OSTCBCur->OSTCBDly       = timeout;               /* Store pend timeout in TCB                     */
-    OS_EventTaskWait(pevent);                         /* Suspend task until event or timeout occurs    */
+	/*当前没有信号量了，就的等待*/
+    OSTCBCur->OSTCBStat     |= OS_STAT_SEM;				/*在当前控制块中打上等待信号量的标记*/
+    OSTCBCur->OSTCBStatPend  = OS_STAT_PEND_OK;			/*等待状态赋值*/
+    OSTCBCur->OSTCBDly       = timeout;					/*超时时间赋上*/
+    OS_EventTaskWait(pevent);							/*让任务等，在ECB中打标记，在就绪组&表中取消就绪的标记*/
     OS_EXIT_CRITICAL();
-    OS_Sched();                                       /* Find next highest priority task ready         */
+    OS_Sched();											/*调度一下*/
     OS_ENTER_CRITICAL();
-    switch (OSTCBCur->OSTCBStatPend) {                /* See if we timed-out or aborted                */
-        case OS_STAT_PEND_OK:
+    switch (OSTCBCur->OSTCBStatPend)					/*OS_Sched函数把任务切走了，这是回来的时候*/
+	{
+        case OS_STAT_PEND_OK:							/*事件发生了*/
              *perr = OS_ERR_NONE;
              break;
-
-        case OS_STAT_PEND_ABORT:
-             *perr = OS_ERR_PEND_ABORT;               /* Indicate that we aborted                      */
+        case OS_STAT_PEND_ABORT:						/*事件超时了*/
+             *perr = OS_ERR_PEND_ABORT;
              break;
-
         case OS_STAT_PEND_TO:
         default:
-             OS_EventTaskRemove(OSTCBCur, pevent);
-             *perr = OS_ERR_TIMEOUT;                  /* Indicate that we didn't get event within TO   */
+             OS_EventTaskRemove(OSTCBCur, pevent);		/*自己调函数清除ECB中的等待事件组表中的标志*/
+             *perr = OS_ERR_TIMEOUT;
              break;
     }
-    OSTCBCur->OSTCBStat          =  OS_STAT_RDY;      /* Set   task  status to ready                   */
-    OSTCBCur->OSTCBStatPend      =  OS_STAT_PEND_OK;  /* Clear pend  status                            */
-    OSTCBCur->OSTCBEventPtr      = (OS_EVENT  *)0;    /* Clear event pointers                          */
+	/*处理一下TCB*/
+    OSTCBCur->OSTCBStat          =  OS_STAT_RDY;
+    OSTCBCur->OSTCBStatPend      =  OS_STAT_PEND_OK;
+    OSTCBCur->OSTCBEventPtr      = (OS_EVENT  *)0;
 #if (OS_EVENT_MULTI_EN > 0u)
     OSTCBCur->OSTCBEventMultiPtr = (OS_EVENT **)0;
 #endif
@@ -392,60 +404,62 @@ void  OSSemPend (OS_EVENT  *pevent,
 *              >  0          if one or more tasks waiting on the semaphore are now readied and informed.
 *********************************************************************************************************
 */
-
+/*放弃其他任务等待信号量*/
 #if OS_SEM_PEND_ABORT_EN > 0u
 INT8U  OSSemPendAbort (OS_EVENT  *pevent,
                        INT8U      opt,
                        INT8U     *perr)
 {
     INT8U      nbr_tasks;
-#if OS_CRITICAL_METHOD == 3u                          /* Allocate storage for CPU status register      */
+#if OS_CRITICAL_METHOD == 3u/* Allocate storage for CPU status register      */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #ifdef OS_SAFETY_CRITICAL
-    if (perr == (INT8U *)0) {
+    if (perr == (INT8U *)0)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
 
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+    if (pevent == (OS_EVENT *)0)
+	{
         *perr = OS_ERR_PEVENT_NULL;
         return (0u);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)/* Validate event block type                     */
+	{
         *perr = OS_ERR_EVENT_TYPE;
         return (0u);
     }
     OS_ENTER_CRITICAL();
-    if (pevent->OSEventGrp != 0u) {                   /* See if any task waiting on semaphore?         */
+    if (pevent->OSEventGrp != 0u)/* See if any task waiting on semaphore?         */
+	{
         nbr_tasks = 0u;
-        switch (opt) {
-            case OS_PEND_OPT_BROADCAST:               /* Do we need to abort ALL waiting tasks?        */
-                 while (pevent->OSEventGrp != 0u) {   /* Yes, ready ALL tasks waiting on semaphore     */
+        switch (opt)
+		{
+            case OS_PEND_OPT_BROADCAST:/* Do we need to abort ALL waiting tasks?        */
+                 while (pevent->OSEventGrp != 0u)/* Yes, ready ALL tasks waiting on semaphore     */
+				 {
                      (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
                      nbr_tasks++;
                  }
                  break;
-
             case OS_PEND_OPT_NONE:
-            default:                                  /* No,  ready HPT       waiting on semaphore     */
+            default:/* No,  ready HPT       waiting on semaphore     */
                  (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
                  nbr_tasks++;
                  break;
         }
         OS_EXIT_CRITICAL();
-        OS_Sched();                                   /* Find HPT ready to run                         */
+        OS_Sched();/* Find HPT ready to run                         */
         *perr = OS_ERR_PEND_ABORT;
         return (nbr_tasks);
     }
     OS_EXIT_CRITICAL();
     *perr = OS_ERR_NONE;
-    return (0u);                                      /* No tasks waiting on semaphore                 */
+    return (0u);/* No tasks waiting on semaphore                 */
 }
 #endif
 
@@ -467,37 +481,37 @@ INT8U  OSSemPendAbort (OS_EVENT  *pevent,
 *              OS_ERR_PEVENT_NULL  If 'pevent' is a NULL pointer.
 *********************************************************************************************************
 */
-
+/*提交一个信号量，发出一个信号量*/
 INT8U  OSSemPost (OS_EVENT *pevent)
 {
-#if OS_CRITICAL_METHOD == 3u                          /* Allocate storage for CPU status register      */
+#if OS_CRITICAL_METHOD == 3u							/*Allocate storage for CPU status register      */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+    if (pevent == (OS_EVENT *)0)						/*ECB无效*/
+	{
         return (OS_ERR_PEVENT_NULL);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)		/*ECB类型无效*/
+	{
         return (OS_ERR_EVENT_TYPE);
     }
     OS_ENTER_CRITICAL();
-    if (pevent->OSEventGrp != 0u) {                   /* See if any task waiting for semaphore         */
-                                                      /* Ready HPT waiting on event                    */
-        (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);
+    if (pevent->OSEventGrp != 0u)						/*有任务在等信号量*/
+	{
+        (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);			/*把任务就绪*/
         OS_EXIT_CRITICAL();
-        OS_Sched();                                   /* Find HPT ready to run                         */
+        OS_Sched();										/*调度一下*/
         return (OS_ERR_NONE);
     }
-    if (pevent->OSEventCnt < 65535u) {                /* Make sure semaphore will not overflow         */
-        pevent->OSEventCnt++;                         /* Increment semaphore count to register event   */
+    if (pevent->OSEventCnt < 65535u)					/*如果信号量没超市*/
+	{
+        pevent->OSEventCnt++;							/*把信号量还回去*/
         OS_EXIT_CRITICAL();
         return (OS_ERR_NONE);
     }
-    OS_EXIT_CRITICAL();                               /* Semaphore value has reached its maximum       */
+    OS_EXIT_CRITICAL();
     return (OS_ERR_SEM_OVF);
 }
 
@@ -520,7 +534,7 @@ INT8U  OSSemPost (OS_EVENT *pevent)
 *              OS_ERR_PDATA_NULL   If 'p_sem_data' is a NULL pointer
 *********************************************************************************************************
 */
-
+/*查询信号量的信息*/
 #if OS_SEM_QUERY_EN > 0u
 INT8U  OSSemQuery (OS_EVENT     *pevent,
                    OS_SEM_DATA  *p_sem_data)
@@ -582,7 +596,7 @@ INT8U  OSSemQuery (OS_EVENT     *pevent,
 *                            OS_ERR_TASK_WAITING  If tasks are waiting on the semaphore.
 *********************************************************************************************************
 */
-
+/*设置信号量的值*/
 #if OS_SEM_SET_EN > 0u
 void  OSSemSet (OS_EVENT  *pevent,
                 INT16U     cnt,
