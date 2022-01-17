@@ -1,6 +1,11 @@
----- os_sem_data Matches (5 in 2 files) ----
-Os_sem.c (source):                   OS_SEM_DATA  *p_sem_data)
-Os_sem.c (source):    if (p_sem_data == (OS_SEM_DATA *)0) {                  /* Validate 'p_sem_data'                    */
-Ucos_ii.h (source):typedef struct os_sem_data {
-Ucos_ii.h (source):} OS_SEM_DATA;
-Ucos_ii.h (source):                                       OS_SEM_DATA     *p_sem_data);
+---- OS_EventTaskWait Matches (10 in 6 files) ----
+Os_core.c (source):*                      Performed in OS_EventTaskWaitMulti()
+Os_core.c (source):    OS_EventTaskWaitMulti(pevents_pend);                /* Suspend task until events or timeout occurs */
+Os_core.c (source):void  OS_EventTaskWait (OS_EVENT *pevent)
+Os_core.c (source):void  OS_EventTaskWaitMulti (OS_EVENT **pevents_wait)
+Os_mbox.c (source):    OS_EventTaskWait(pevent);                         /* Suspend task until event or timeout occurs    */
+Os_mutex.c (source):    OS_EventTaskWait(pevent);                         /* Suspend task until event or timeout occurs    */
+Os_q.c (source):    OS_EventTaskWait(pevent);                    /* Suspend task until event or timeout occurs         */
+Os_sem.c (source):    OS_EventTaskWait(pevent);							/*让任务等，在ECB中打标记，在就绪组&表中取消就绪的标记*/
+Ucos_ii.h (source):void          OS_EventTaskWait        (OS_EVENT        *pevent);
+Ucos_ii.h (source):void          OS_EventTaskWaitMulti   (OS_EVENT       **pevents_wait);
