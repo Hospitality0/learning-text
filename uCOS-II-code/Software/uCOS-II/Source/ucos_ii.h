@@ -191,8 +191,8 @@ extern "C" {
 * These #defines are used to establish the options for OS???PendAbort().
 *********************************************************************************************************
 */
-#define  OS_PEND_OPT_NONE               0u  /* NO option selected                                      */
-#define  OS_PEND_OPT_BROADCAST          1u  /* Broadcast action to ALL tasks waiting                   */
+#define  OS_PEND_OPT_NONE               0u  /*只让最高优先级的退出等待*//* NO option selected                                      */
+#define  OS_PEND_OPT_BROADCAST          1u  /*让所有的任务退出等待*//* Broadcast action to ALL tasks waiting                   */
 
 /*
 *********************************************************************************************************
@@ -508,12 +508,13 @@ typedef struct os_q_data {
 *                                           SEMAPHORE DATA
 *********************************************************************************************************
 */
-
+/*接收信号量信息的数据结构*/
 #if OS_SEM_EN > 0u
-typedef struct os_sem_data {
-    INT16U  OSCnt;                          /* Semaphore count                                         */
-    OS_PRIO OSEventTbl[OS_EVENT_TBL_SIZE];  /* List of tasks waiting for event to occur                */
-    OS_PRIO OSEventGrp;                     /* Group corresponding to tasks waiting for event to occur */
+typedef struct os_sem_data
+{
+    INT16U  OSCnt;                          /*信号量值*/
+    OS_PRIO OSEventTbl[OS_EVENT_TBL_SIZE];  /*事件等待表*/
+    OS_PRIO OSEventGrp;                     /*事件等待组*/
 } OS_SEM_DATA;
 #endif
 

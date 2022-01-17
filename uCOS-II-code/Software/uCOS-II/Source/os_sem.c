@@ -406,12 +406,12 @@ void  OSSemPend (OS_EVENT  *pevent,						/*ECB地址*/
 */
 /*放弃其他任务等待信号量*/
 #if OS_SEM_PEND_ABORT_EN > 0u
-INT8U  OSSemPendAbort (OS_EVENT  *pevent,
-                       INT8U      opt,
-                       INT8U     *perr)
+INT8U  OSSemPendAbort (OS_EVENT  *pevent,					/*ECB地址*/
+                       INT8U      opt,						/*参数*/
+                       INT8U     *perr)						/*返回值*/
 {
     INT8U      nbr_tasks;
-#if OS_CRITICAL_METHOD == 3u/* Allocate storage for CPU status register      */
+#if OS_CRITICAL_METHOD == 3u								/* Allocate storage for CPU status register      */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
 #ifdef OS_SAFETY_CRITICAL
@@ -428,38 +428,38 @@ INT8U  OSSemPendAbort (OS_EVENT  *pevent,
         return (0u);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)/* Validate event block type                     */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)			/* Validate event block type                     */
 	{
         *perr = OS_ERR_EVENT_TYPE;
         return (0u);
     }
     OS_ENTER_CRITICAL();
-    if (pevent->OSEventGrp != 0u)/* See if any task waiting on semaphore?         */
+    if (pevent->OSEventGrp != 0u)							/*如果有任务等信号量*/
 	{
         nbr_tasks = 0u;
         switch (opt)
 		{
-            case OS_PEND_OPT_BROADCAST:/* Do we need to abort ALL waiting tasks?        */
-                 while (pevent->OSEventGrp != 0u)/* Yes, ready ALL tasks waiting on semaphore     */
+            case OS_PEND_OPT_BROADCAST:						/*让所有的任务退出等待*/
+                 while (pevent->OSEventGrp != 0u)
 				 {
                      (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
                      nbr_tasks++;
                  }
                  break;
-            case OS_PEND_OPT_NONE:
-            default:/* No,  ready HPT       waiting on semaphore     */
+            case OS_PEND_OPT_NONE:							/*只让最高优先级的退出等待*/
+            default:
                  (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
                  nbr_tasks++;
                  break;
         }
         OS_EXIT_CRITICAL();
-        OS_Sched();/* Find HPT ready to run                         */
+        OS_Sched();											/*调度一下*/
         *perr = OS_ERR_PEND_ABORT;
         return (nbr_tasks);
     }
     OS_EXIT_CRITICAL();
     *perr = OS_ERR_NONE;
-    return (0u);/* No tasks waiting on semaphore                 */
+    return (0u);
 }
 #endif
 
@@ -542,35 +542,36 @@ INT8U  OSSemQuery (OS_EVENT     *pevent,
     INT8U       i;
     OS_PRIO    *psrc;
     OS_PRIO    *pdest;
-#if OS_CRITICAL_METHOD == 3u                               /* Allocate storage for CPU status register */
+#if OS_CRITICAL_METHOD == 3u								/*Allocate storage for CPU status register */
     OS_CPU_SR   cpu_sr = 0u;
 #endif
-
-
-
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                         /* Validate 'pevent'                        */
+    if (pevent == (OS_EVENT *)0)
+	{
         return (OS_ERR_PEVENT_NULL);
     }
-    if (p_sem_data == (OS_SEM_DATA *)0) {                  /* Validate 'p_sem_data'                    */
+    if (p_sem_data == (OS_SEM_DATA *)0)
+	{
         return (OS_ERR_PDATA_NULL);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {        /* Validate event block type                */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)
+	{
         return (OS_ERR_EVENT_TYPE);
     }
     OS_ENTER_CRITICAL();
-    p_sem_data->OSEventGrp = pevent->OSEventGrp;           /* Copy message mailbox wait list           */
-    psrc                   = &pevent->OSEventTbl[0];
-    pdest                  = &p_sem_data->OSEventTbl[0];
-    for (i = 0u; i < OS_EVENT_TBL_SIZE; i++) {
+    p_sem_data->OSEventGrp = pevent->OSEventGrp;			/*复制事件等待组*/
+    psrc                   = &pevent->OSEventTbl[0];		/*psrc指向事件等待表*/
+    pdest                  = &p_sem_data->OSEventTbl[0];	/*pdest指向拷贝的目的地*/
+    for (i = 0u; i < OS_EVENT_TBL_SIZE; i++)				/*把ECB拷贝到p_sem_data*/
+	{
         *pdest++ = *psrc++;
     }
-    p_sem_data->OSCnt = pevent->OSEventCnt;                /* Get semaphore count                      */
+    p_sem_data->OSCnt = pevent->OSEventCnt;					/*拷贝信号量的值*/
     OS_EXIT_CRITICAL();
     return (OS_ERR_NONE);
 }
-#endif                                                     /* OS_SEM_QUERY_EN                          */
+#endif
 
 /*$PAGE*/
 /*
@@ -596,43 +597,48 @@ INT8U  OSSemQuery (OS_EVENT     *pevent,
 *                            OS_ERR_TASK_WAITING  If tasks are waiting on the semaphore.
 *********************************************************************************************************
 */
-/*设置信号量的值*/
+/*直接设置信号量的值*/
 #if OS_SEM_SET_EN > 0u
 void  OSSemSet (OS_EVENT  *pevent,
-                INT16U     cnt,
+                INT16U     cnt,							/*要设置信号量的值*/
                 INT8U     *perr)
 {
-#if OS_CRITICAL_METHOD == 3u                          /* Allocate storage for CPU status register      */
+#if OS_CRITICAL_METHOD == 3u							/* Allocate storage for CPU status register      */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #ifdef OS_SAFETY_CRITICAL
-    if (perr == (INT8U *)0) {
+    if (perr == (INT8U *)0)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
-
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                    /* Validate 'pevent'                             */
+    if (pevent == (OS_EVENT *)0)
+	{
         *perr = OS_ERR_PEVENT_NULL;
         return;
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_SEM) {   /* Validate event block type                     */
+    if (pevent->OSEventType != OS_EVENT_TYPE_SEM)
+	{
         *perr = OS_ERR_EVENT_TYPE;
         return;
     }
     OS_ENTER_CRITICAL();
     *perr = OS_ERR_NONE;
-    if (pevent->OSEventCnt > 0u) {                    /* See if semaphore already has a count          */
-        pevent->OSEventCnt = cnt;                     /* Yes, set it to the new value specified.       */
-    } else {                                          /* No                                            */
-        if (pevent->OSEventGrp == 0u) {               /*      See if task(s) waiting?                  */
-            pevent->OSEventCnt = cnt;                 /*      No, OK to set the value                  */
-        } else {
-            *perr              = OS_ERR_TASK_WAITING;
+    if (pevent->OSEventCnt > 0u)						/*信号量的值原来就>0*/
+	{
+        pevent->OSEventCnt = cnt;						/*信号量改成新值*/
+    }
+	else
+	{
+        if (pevent->OSEventGrp == 0u)					/*如果没任务等待*/
+		{
+            pevent->OSEventCnt = cnt;					/*信号量改成新值*/
+        }
+		else
+		{
+            *perr              = OS_ERR_TASK_WAITING;	/*有任务等待，不允许修改*/
         }
     }
     OS_EXIT_CRITICAL();

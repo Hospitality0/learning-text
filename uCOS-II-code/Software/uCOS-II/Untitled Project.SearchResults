@@ -1,23 +1,6 @@
----- OS_EventTaskRdy Matches (22 in 6 files) ----
-Os_core.c (source):*                      Performed in OS_EventTaskRdy(), if events posted or aborted
-Os_core.c (source):INT8U  OS_EventTaskRdy (OS_EVENT  *pevent,
-Os_mbox.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_MBOX, OS_STAT_PEND_OK);
-Os_mbox.c (source):                     (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_MBOX, OS_STAT_PEND_ABORT);
-Os_mbox.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_MBOX, OS_STAT_PEND_ABORT);
-Os_mbox.c (source):        (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_MBOX, OS_STAT_PEND_OK);
-Os_mbox.c (source):                (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_MBOX, OS_STAT_PEND_OK);
-Os_mbox.c (source):            (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_MBOX, OS_STAT_PEND_OK);
-Os_mutex.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_MUTEX, OS_STAT_PEND_OK);
-Os_mutex.c (source):        prio                = OS_EventTaskRdy(pevent, (void *)0, OS_STAT_MUTEX, OS_STAT_PEND_OK);
-Os_q.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_Q, OS_STAT_PEND_OK);
-Os_q.c (source):                     (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_Q, OS_STAT_PEND_ABORT);
-Os_q.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_Q, OS_STAT_PEND_ABORT);
-Os_q.c (source):        (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_Q, OS_STAT_PEND_OK);
-Os_q.c (source):        (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_Q, OS_STAT_PEND_OK);
-Os_q.c (source):                (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_Q, OS_STAT_PEND_OK);
-Os_q.c (source):            (void)OS_EventTaskRdy(pevent, pmsg, OS_STAT_Q, OS_STAT_PEND_OK);
-Os_sem.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);
-Os_sem.c (source):                     (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
-Os_sem.c (source):                 (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_ABORT);
-Os_sem.c (source):        (void)OS_EventTaskRdy(pevent, (void *)0, OS_STAT_SEM, OS_STAT_PEND_OK);
-Ucos_ii.h (source):INT8U         OS_EventTaskRdy         (OS_EVENT        *pevent,
+---- os_sem_data Matches (5 in 2 files) ----
+Os_sem.c (source):                   OS_SEM_DATA  *p_sem_data)
+Os_sem.c (source):    if (p_sem_data == (OS_SEM_DATA *)0) {                  /* Validate 'p_sem_data'                    */
+Ucos_ii.h (source):typedef struct os_sem_data {
+Ucos_ii.h (source):} OS_SEM_DATA;
+Ucos_ii.h (source):                                       OS_SEM_DATA     *p_sem_data);
