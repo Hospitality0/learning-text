@@ -44,7 +44,7 @@
 *                         if you didn't pass a pointer to a semaphore
 *********************************************************************************************************
 */
-/*无等待的信号量*/
+/*无等待的信号量，就是说申请到信号量就拿，申请不到也不阻塞自己，继续往下执行*/
 #if OS_SEM_ACCEPT_EN > 0u
 INT16U  OSSemAccept (OS_EVENT *pevent)
 {
@@ -127,7 +127,6 @@ OS_EVENT  *OSSemCreate (INT16U cnt)
     return (pevent);
 }
 
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                         DELETE A SEMAPHORE
@@ -295,7 +294,7 @@ OS_EVENT  *OSSemDel (OS_EVENT  *pevent,						/*ECB地址*/
 * Returns    : none
 *********************************************************************************************************
 */
-/*请求一个信号量，等待一个信号量*/
+/*请求一个信号量，等待一个信号量，也就是任务申请一把钥匙*/
 void  OSSemPend (OS_EVENT  *pevent,						/*ECB地址*/
                  INT32U     timeout,					/*设定的超时时间*/
                  INT8U     *perr)
@@ -481,7 +480,7 @@ INT8U  OSSemPendAbort (OS_EVENT  *pevent,					/*ECB地址*/
 *              OS_ERR_PEVENT_NULL  If 'pevent' is a NULL pointer.
 *********************************************************************************************************
 */
-/*提交一个信号量，发出一个信号量*/
+/*提交一个信号量，发出一个信号量，也就是申请完钥匙还回去*/
 INT8U  OSSemPost (OS_EVENT *pevent)
 {
 #if OS_CRITICAL_METHOD == 3u							/*Allocate storage for CPU status register      */
@@ -505,7 +504,7 @@ INT8U  OSSemPost (OS_EVENT *pevent)
         OS_Sched();										/*调度一下*/
         return (OS_ERR_NONE);
     }
-    if (pevent->OSEventCnt < 65535u)					/*如果信号量没超市*/
+    if (pevent->OSEventCnt < 65535u)					/*如果信号量没超限制*/
 	{
         pevent->OSEventCnt++;							/*把信号量还回去*/
         OS_EXIT_CRITICAL();
@@ -534,7 +533,7 @@ INT8U  OSSemPost (OS_EVENT *pevent)
 *              OS_ERR_PDATA_NULL   If 'p_sem_data' is a NULL pointer
 *********************************************************************************************************
 */
-/*查询信号量的信息*/
+/*查询信号量的信息，就是把ECB中的东西全赋值到os_sem_data这个结构体里面*/
 #if OS_SEM_QUERY_EN > 0u
 INT8U  OSSemQuery (OS_EVENT     *pevent,
                    OS_SEM_DATA  *p_sem_data)

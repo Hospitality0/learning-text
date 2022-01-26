@@ -358,7 +358,7 @@ typedef struct os_event
 {
     INT8U    OSEventType;							/*事件控制块的类型*/
     void    *OSEventPtr;							/*指向下一个ECB*/
-    INT16U   OSEventCnt;							/*信号量计数值，除了信号量其他的事件无效*/
+    INT16U   OSEventCnt;							/*信号量计数值，互斥信号量中高八位表示优先级第八位表示有没有人使用*/
     OS_PRIO  OSEventGrp;							/*事件等待组*/
     OS_PRIO  OSEventTbl[OS_EVENT_TBL_SIZE];			/*等待事件的任务表*/
 													/*事件等待表和事件等待组和任务的类似，但是任务的是独立的，事件的在控制块里*/

@@ -1253,7 +1253,7 @@ void  OS_EventTaskRemoveMulti (OS_TCB    *ptcb,
 * Note       : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-/*事件等待表初始化*/
+/*事件等待表初始化，也就是清一下ECB中的等待组+表*/
 #if (OS_EVENT_EN)
 void  OS_EventWaitListInit (OS_EVENT *pevent)
 {
