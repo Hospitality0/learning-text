@@ -42,7 +42,7 @@
 *                            if you didn't pass the proper event pointer.
 *********************************************************************************************************
 */
-
+/*不等待一个邮箱*/
 #if OS_MBOX_ACCEPT_EN > 0u
 void  *OSMboxAccept (OS_EVENT *pevent)
 {
@@ -84,7 +84,7 @@ void  *OSMboxAccept (OS_EVENT *pevent)
 *              == (OS_EVENT *)0  if no event control blocks were available
 *********************************************************************************************************
 */
-
+/*创建一个邮箱*/
 OS_EVENT  *OSMboxCreate (void *pmsg)
 {
     OS_EVENT  *pevent;
@@ -156,7 +156,7 @@ OS_EVENT  *OSMboxCreate (void *pmsg)
 *                 will no longer be guarded by the mailbox.
 *********************************************************************************************************
 */
-
+/*删除一个邮箱*/
 #if OS_MBOX_DEL_EN > 0u
 OS_EVENT  *OSMboxDel (OS_EVENT  *pevent,
                       INT8U      opt,
@@ -278,7 +278,7 @@ OS_EVENT  *OSMboxDel (OS_EVENT  *pevent,
 *                            if you didn't pass the proper pointer to the event control block.
 *********************************************************************************************************
 */
-/*$PAGE*/
+/*等待一个邮箱*/
 void  *OSMboxPend (OS_EVENT  *pevent,
                    INT32U     timeout,
                    INT8U     *perr)
@@ -389,7 +389,7 @@ void  *OSMboxPend (OS_EVENT  *pevent,
 *              >  0          if one or more tasks waiting on the mailbox are now readied and informed.
 *********************************************************************************************************
 */
-
+/*不等待邮箱*/
 #if OS_MBOX_PEND_ABORT_EN > 0u
 INT8U  OSMboxPendAbort (OS_EVENT  *pevent,
                         INT8U      opt,
@@ -468,7 +468,7 @@ INT8U  OSMboxPendAbort (OS_EVENT  *pevent,
 * Note(s)    : 1) HPT means Highest Priority Task
 *********************************************************************************************************
 */
-
+/*发出邮箱*/
 #if OS_MBOX_POST_EN > 0u
 INT8U  OSMboxPost (OS_EVENT  *pevent,
                    void      *pmsg)
@@ -606,7 +606,7 @@ INT8U  OSMboxPostOpt (OS_EVENT  *pevent,
 *              OS_ERR_PDATA_NULL   If 'p_mbox_data' is a NULL pointer
 *********************************************************************************************************
 */
-
+/*查询邮箱消息*/
 #if OS_MBOX_QUERY_EN > 0u
 INT8U  OSMboxQuery (OS_EVENT      *pevent,
                     OS_MBOX_DATA  *p_mbox_data)

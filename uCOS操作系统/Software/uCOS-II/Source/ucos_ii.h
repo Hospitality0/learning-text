@@ -465,14 +465,14 @@ typedef struct os_mem_data {
 *                                    MUTUAL EXCLUSION SEMAPHORE DATA
 *********************************************************************************************************
 */
-
+/*接收互斥信号量信息的数据结构*/
 #if OS_MUTEX_EN > 0u
 typedef struct os_mutex_data {
-    OS_PRIO OSEventTbl[OS_EVENT_TBL_SIZE];  /* List of tasks waiting for event to occur                */
-    OS_PRIO OSEventGrp;                     /* Group corresponding to tasks waiting for event to occur */
-    BOOLEAN OSValue;                        /* Mutex value (OS_FALSE = used, OS_TRUE = available)      */
-    INT8U   OSOwnerPrio;                    /* Mutex owner's task priority or 0xFF if no owner         */
-    INT8U   OSMutexPIP;                     /* Priority Inheritance Priority or 0xFF if no owner       */
+    OS_PRIO OSEventTbl[OS_EVENT_TBL_SIZE];  /*时间等待表*/
+    OS_PRIO OSEventGrp;                     /*时间等待组*/
+    BOOLEAN OSValue;                        /*互斥信号量的值*/
+    INT8U   OSOwnerPrio;                    /*信号量所有者优先级*/
+    INT8U   OSMutexPIP;                     /*临时优先级*/
 } OS_MUTEX_DATA;
 #endif
 

@@ -84,43 +84,47 @@ static  void  OSMutex_RdyAtPrio(OS_TCB *ptcb, INT8U prio);
 BOOLEAN  OSMutexAccept (OS_EVENT  *pevent,
                         INT8U     *perr)
 {
-    INT8U      pip;                                    /* Priority Inheritance Priority (PIP)          */
-#if OS_CRITICAL_METHOD == 3u                           /* Allocate storage for CPU status register     */
+    INT8U      pip;						/*临时优先级*/
+#if OS_CRITICAL_METHOD == 3u			/*Allocate storage for CPU status register     */
     OS_CPU_SR  cpu_sr = 0u;
 #endif
-
-
-
 #ifdef OS_SAFETY_CRITICAL
-    if (perr == (INT8U *)0) {
+    if (perr == (INT8U *)0)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
-
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                     /* Validate 'pevent'                            */
+    if (pevent == (OS_EVENT *)0)		/*Validate 'pevent'                            */
+	{
         *perr = OS_ERR_PEVENT_NULL;
         return (OS_FALSE);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_MUTEX) {  /* Validate event block type                    */
+    if (pevent->OSEventType != OS_EVENT_TYPE_MUTEX)		/*Validate event block type                    */
+	{
         *perr = OS_ERR_EVENT_TYPE;
         return (OS_FALSE);
     }
-    if (OSIntNesting > 0u) {                           /* Make sure it's not called from an ISR        */
+    if (OSIntNesting > 0u)								/*Make sure it's not called from an ISR        */
+	{
         *perr = OS_ERR_PEND_ISR;
         return (OS_FALSE);
     }
-    OS_ENTER_CRITICAL();                               /* Get value (0 or 1) of Mutex                  */
-    pip = (INT8U)(pevent->OSEventCnt >> 8u);           /* Get PIP from mutex                           */
-    if ((pevent->OSEventCnt & OS_MUTEX_KEEP_LOWER_8) == OS_MUTEX_AVAILABLE) {
-        pevent->OSEventCnt &= OS_MUTEX_KEEP_UPPER_8;   /*      Mask off LSByte (Acquire Mutex)         */
-        pevent->OSEventCnt |= OSTCBCur->OSTCBPrio;     /*      Save current task priority in LSByte    */
-        pevent->OSEventPtr  = (void *)OSTCBCur;        /*      Link TCB of task owning Mutex           */
-        if (OSTCBCur->OSTCBPrio <= pip) {              /*      PIP 'must' have a SMALLER prio ...      */
-            OS_EXIT_CRITICAL();                        /*      ... than current task!                  */
+    OS_ENTER_CRITICAL();								/*Get value (0 or 1) of Mutex                  */
+    pip = (INT8U)(pevent->OSEventCnt >> 8u);			/*获取PIP优先级*/
+    if ((pevent->OSEventCnt & OS_MUTEX_KEEP_LOWER_8) == OS_MUTEX_AVAILABLE)/*互斥信号量没人用*/
+	{
+        pevent->OSEventCnt &= OS_MUTEX_KEEP_UPPER_8;	/*第八位清0，表示占用互斥信号量*/
+        pevent->OSEventCnt |= OSTCBCur->OSTCBPrio;		/*本任务的优先级存到OSEventCnt低八位*/
+        pevent->OSEventPtr  = (void *)OSTCBCur;			/*OSEventPtr指向当前任务TCB*/
+        if (OSTCBCur->OSTCBPrio <= pip)					/*PIP优先级低*/
+		{
+            OS_EXIT_CRITICAL();
             *perr = OS_ERR_PIP_LOWER;
-        } else {
+        }
+		else											/*PIP优先级高*/
+		{
             OS_EXIT_CRITICAL();
             *perr = OS_ERR_NONE;
         }
@@ -681,44 +685,49 @@ INT8U  OSMutexQuery (OS_EVENT       *pevent,
     INT8U       i;
     OS_PRIO    *psrc;
     OS_PRIO    *pdest;
-#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
+#if OS_CRITICAL_METHOD == 3u
     OS_CPU_SR   cpu_sr = 0u;
 #endif
-
-
-
-    if (OSIntNesting > 0u) {                               /* See if called from ISR ...               */
-        return (OS_ERR_QUERY_ISR);                         /* ... can't QUERY mutex from an ISR        */
+    if (OSIntNesting > 0u)
+	{
+        return (OS_ERR_QUERY_ISR);
     }
 #if OS_ARG_CHK_EN > 0u
-    if (pevent == (OS_EVENT *)0) {                         /* Validate 'pevent'                        */
+    if (pevent == (OS_EVENT *)0)
+	{
         return (OS_ERR_PEVENT_NULL);
     }
-    if (p_mutex_data == (OS_MUTEX_DATA *)0) {              /* Validate 'p_mutex_data'                  */
+    if (p_mutex_data == (OS_MUTEX_DATA *)0)
+	{
         return (OS_ERR_PDATA_NULL);
     }
 #endif
-    if (pevent->OSEventType != OS_EVENT_TYPE_MUTEX) {      /* Validate event block type                */
+    if (pevent->OSEventType != OS_EVENT_TYPE_MUTEX)
+	{
         return (OS_ERR_EVENT_TYPE);
     }
     OS_ENTER_CRITICAL();
-    p_mutex_data->OSMutexPIP  = (INT8U)(pevent->OSEventCnt >> 8u);
-    p_mutex_data->OSOwnerPrio = (INT8U)(pevent->OSEventCnt & OS_MUTEX_KEEP_LOWER_8);
-    if (p_mutex_data->OSOwnerPrio == 0xFFu) {
+    p_mutex_data->OSMutexPIP  = (INT8U)(pevent->OSEventCnt >> 8u);						/*获取临时优先级*/
+    p_mutex_data->OSOwnerPrio = (INT8U)(pevent->OSEventCnt & OS_MUTEX_KEEP_LOWER_8);	/*获取信号量所有者优先级*/
+    if (p_mutex_data->OSOwnerPrio == 0xFFu)	/*未使用*/
+	{
         p_mutex_data->OSValue = OS_TRUE;
-    } else {
+    }
+	else									/*有人占用*/
+	{
         p_mutex_data->OSValue = OS_FALSE;
     }
-    p_mutex_data->OSEventGrp  = pevent->OSEventGrp;        /* Copy wait list                           */
+    p_mutex_data->OSEventGrp  = pevent->OSEventGrp;				/*拷贝事件等待组和表*/
     psrc                      = &pevent->OSEventTbl[0];
     pdest                     = &p_mutex_data->OSEventTbl[0];
-    for (i = 0u; i < OS_EVENT_TBL_SIZE; i++) {
+    for (i = 0u; i < OS_EVENT_TBL_SIZE; i++)
+	{
         *pdest++ = *psrc++;
     }
     OS_EXIT_CRITICAL();
     return (OS_ERR_NONE);
 }
-#endif                                                     /* OS_MUTEX_QUERY_EN                        */
+#endif
 
 /*$PAGE*/
 /*
@@ -735,15 +744,14 @@ INT8U  OSMutexQuery (OS_EVENT       *pevent,
 *********************************************************************************************************
 */
 /*修改任务优先级*/
-static  void  OSMutex_RdyAtPrio (OS_TCB  *ptcb,
-                                 INT8U    prio)
+static  void  OSMutex_RdyAtPrio (OS_TCB  *ptcb,	/*TCB地址*/
+                                 INT8U    prio)	/*要修改的优先级*/
 {
     INT8U  y;
-
-
     y            =  ptcb->OSTCBY;                          /* Remove owner from ready list at 'pip'    */
     OSRdyTbl[y] &= (OS_PRIO)~ptcb->OSTCBBitX;
-    if (OSRdyTbl[y] == 0u) {
+    if (OSRdyTbl[y] == 0u)
+	{
         OSRdyGrp &= (OS_PRIO)~ptcb->OSTCBBitY;
     }
     ptcb->OSTCBPrio         = prio;
