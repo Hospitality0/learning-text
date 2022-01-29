@@ -1,5 +1,1 @@
----- OSMutex_Rdy Matches (4 in 1 files) ----
-Os_mutex.c (ucos-ii\source):static  void  OSMutex_RdyAtPrio(OS_TCB *ptcb, INT8U prio);
-Os_mutex.c (ucos-ii\source):                     OSMutex_RdyAtPrio(ptcb, prio);				/*把任务的优先级改回来*/
-Os_mutex.c (ucos-ii\source):        OSMutex_RdyAtPrio(OSTCBCur, prio);							/*恢复任务的原来优先级*/
-Os_mutex.c (ucos-ii\source):static  void  OSMutex_RdyAtPrio (OS_TCB  *ptcb,
+---- printf Matches (0 in 0 files) ----
