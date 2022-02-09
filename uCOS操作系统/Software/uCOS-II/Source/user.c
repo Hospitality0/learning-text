@@ -241,7 +241,7 @@ void TaskMultx1(void *pParam)
 	OSTaskDel(OS_PRIO_SELF);
 	return;
 }
- /*Task  TaskMultx2*/ 
+/*Task  TaskMultx2*/ 
 void TaskMultx2(void *pParam)
 {
 	 INT8U *perr;
@@ -264,15 +264,35 @@ void TaskMultx2(void *pParam)
 		for(i = 0;i < 5;i++)
 		{
 			printf("操作串口");
-			for(j = 0;j<99999999;j--);
+			for(j = 0;j<99999999;j--);			/*模拟操作串口*/
 		}
 	 }
+	 else
+	 {
+	 	printf("请求信号量失败");
+	 }
+	 OSMutexPost();								/*提交信号量*/
+	 for(i = 0;i < 5;i++)
+	 {
+		 printf("中优先级任务执行完信号量后，做其他操作");
+		 for(j = 0;j<99999999;j--); 			 /*模拟做其他工作*/
+	 }
+	 printf("高优先级任务结束，准备注销自己");
+	 OSTaskDel(OS_PRIO_SELF);
+	 return;
 }
-
-
-
-
-
+/*Task  打印任务*/ 
+void TaskPrint(void *pParam)
+{
+	INT8U *perr;
+	INT8U err,i;
+ 	INT32U j;
+ 	perr = &err;
+ 	err = OS_ERR_NONE;
+	i = 0;
+	OSTimeDly(95);
+	/*略*/
+}
 
 
 
