@@ -198,6 +198,7 @@ void UserTaskSemC(void *pParam)
 
 
 /*使用互斥信号量，使用优先级反转方法*/
+/*Task  TaskMultx1*/
 OS_EVENT *myMutex;
 void TaskMultx1(void *pParam)
 {
@@ -207,16 +208,66 @@ void TaskMultx1(void *pParam)
 	perr = &err;
 	err = OS_ERR_NONE;
 
-	myMutex = OSMutexCreate(3,perr);	/*创建信号量，临时优先级设为3*/
-	if(myMutex == (OS_EVENT *)0)		/*如果创建失败*/
+	myMutex = OSMutexCreate(3,perr);			/*创建信号量，临时优先级设为3*/
+	if(myMutex == (OS_EVENT *)0)				/*如果创建失败*/
 	{
-		printf();
+		printf("Task TaskMultx1创建信号量失败");
+		OSTaskDel(OS_PRIO_SELF);				/*创建失败删除自己*/
+		return;
 	}
+	printf("创建高优先级任务成功。创建互斥信号量成功");
+	OSTimeDly(100);								/*等1秒然后申请信号量*/
+	printf("高优先级任务准备申请互斥信号量");
+	OSMutexPend(myMutex,0,perr);				/*等信号量*/
+	if(*perr == OS_ERR_NONE)
+	{
+		for(i = 0;i < 5;i++)
+		{
+			printf("操作串口");					/*操作IO*/
+			for(j = 0;j<99999999;j--);			/*假装操作串口*/
+		}
+	}
+	else
+	{
+		printf("申请信号量失败");
+	}
+	OSMutexPost();								/*提交信号量*/
+	for(i = 0;i < 5;i++)
+	{
+		printf("高优先级任务执行完信号量后，做其他操作");
+		for(j = 0;j<99999999;j--);				/*模拟做其他工作*/
+	}
+	printf("高优先级任务结束，准备注销自己");
+	OSTaskDel(OS_PRIO_SELF);
+	return;
 }
- 
- 
- 
+ /*Task  TaskMultx2*/ 
+void TaskMultx2(void *pParam)
+{
+	 INT8U *perr;
+	 INT8U err,i;
+	 INT32U j;
+	 perr = &err;
+	 err = OS_ERR_NONE;
 
+	 if(myMutex == (OS_EVENT *)0)				/*如果信号量没被创建*/
+	 {
+	 	printf("互斥信号量创建失败");
+		OSTaskDel(OS_PRIO_SELF);
+		return;
+	 }
+	 OSTimeDly(90);
+	 OSMutexPend(myMutex,0,perr);				/*等待互斥信号量*/
+	 if(*perr == OS_ERR_NONE)
+	 {
+	 	printf("任务TaskMultx2申请互斥信号量成功");
+		for(i = 0;i < 5;i++)
+		{
+			printf("操作串口");
+			for(j = 0;j<99999999;j--);
+		}
+	 }
+}
 
 
 
