@@ -32,8 +32,8 @@
 *********************************************************************************************************
 */
 
-static  void     OS_FlagBlock(OS_FLAG_GRP *pgrp, OS_FLAG_NODE *pnode, OS_FLAGS flags, INT8U wait_type, INT32U timeout);
-static  BOOLEAN  OS_FlagTaskRdy(OS_FLAG_NODE *pnode, OS_FLAGS flags_rdy);
+static  void     OS_FlagBlock(OS_FLAG_GRP *pgrp, OS_FLAG_NODE *pnode, OS_FLAGS flags, INT8U wait_type, INT32U timeout);/*事件标志组阻塞函数*/
+static  BOOLEAN  OS_FlagTaskRdy(OS_FLAG_NODE *pnode, OS_FLAGS flags_rdy);		/*标志节点任务就绪*/
 
 /*$PAGE*/
 /*
@@ -87,7 +87,7 @@ static  BOOLEAN  OS_FlagTaskRdy(OS_FLAG_NODE *pnode, OS_FLAGS flags_rdy);
 *                 event flags.
 *********************************************************************************************************
 */
-
+/*不等待的请求事件标志组*/
 #if OS_FLAG_ACCEPT_EN > 0u
 OS_FLAGS  OSFlagAccept (OS_FLAG_GRP  *pgrp,
                         OS_FLAGS      flags,
@@ -210,51 +210,54 @@ OS_FLAGS  OSFlagAccept (OS_FLAG_GRP  *pgrp,
 * Called from: Task ONLY
 *********************************************************************************************************
 */
-
+/*创建事件标志组*/
 OS_FLAG_GRP  *OSFlagCreate (OS_FLAGS  flags,
                             INT8U    *perr)
 {
     OS_FLAG_GRP *pgrp;
-#if OS_CRITICAL_METHOD == 3u                        /* Allocate storage for CPU status register        */
+#if OS_CRITICAL_METHOD == 3u
     OS_CPU_SR    cpu_sr = 0u;
 #endif
 
-
-
 #ifdef OS_SAFETY_CRITICAL
-    if (perr == (INT8U *)0) {
+    if (perr == (INT8U *)0)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
-    if (OSSafetyCriticalStartFlag == OS_TRUE) {
+    if (OSSafetyCriticalStartFlag == OS_TRUE)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
 
-    if (OSIntNesting > 0u) {                        /* See if called from ISR ...                      */
-        *perr = OS_ERR_CREATE_ISR;                  /* ... can't CREATE from an ISR                    */
+    if (OSIntNesting > 0u)							/*中断里不能创建事件标志组*/
+	{
+        *perr = OS_ERR_CREATE_ISR;
         return ((OS_FLAG_GRP *)0);
     }
     OS_ENTER_CRITICAL();
-    pgrp = OSFlagFreeList;                          /* Get next free event flag                        */
-    if (pgrp != (OS_FLAG_GRP *)0) {                 /* See if we have event flag groups available      */
-                                                    /* Adjust free list                                */
-        OSFlagFreeList       = (OS_FLAG_GRP *)OSFlagFreeList->OSFlagWaitList;
-        pgrp->OSFlagType     = OS_EVENT_TYPE_FLAG;  /* Set to event flag group type                    */
-        pgrp->OSFlagFlags    = flags;               /* Set to desired initial value                    */
-        pgrp->OSFlagWaitList = (void *)0;           /* Clear list of tasks waiting on flags            */
+    pgrp = OSFlagFreeList;                          /*取一个事件标志组*/
+    if (pgrp != (OS_FLAG_GRP *)0)					/*取到的事件标志组有效*/
+	{
+        OSFlagFreeList       = (OS_FLAG_GRP *)OSFlagFreeList->OSFlagWaitList;		/*OSFlagFreeList指向下一个*/
+        pgrp->OSFlagType     = OS_EVENT_TYPE_FLAG;  /*类型设置为事件标志组*/
+        pgrp->OSFlagFlags    = flags;               /*设置事件标志*/
+        pgrp->OSFlagWaitList = (void *)0;           /*清事件等待列表指针*/
 #if OS_FLAG_NAME_EN > 0u
         pgrp->OSFlagName     = (INT8U *)(void *)"?";
 #endif
         OS_EXIT_CRITICAL();
         *perr                = OS_ERR_NONE;
-    } else {
+    }
+	else
+	{
         OS_EXIT_CRITICAL();
         *perr                = OS_ERR_FLAG_GRP_DEPLETED;
     }
-    return (pgrp);                                  /* Return pointer to event flag group              */
+    return (pgrp);
 }
 
 /*$PAGE*/
@@ -293,7 +296,7 @@ OS_FLAG_GRP  *OSFlagCreate (OS_FLAGS  flags,
 *                 time is directly proportional to the number of tasks waiting on the event flag group.
 *********************************************************************************************************
 */
-
+/*删除事件标志组*/
 #if OS_FLAG_DEL_EN > 0u
 OS_FLAG_GRP  *OSFlagDel (OS_FLAG_GRP  *pgrp,
                          INT8U         opt,
@@ -576,7 +579,7 @@ void  OSFlagNameSet (OS_FLAG_GRP  *pgrp,
 *                 event flags.
 *********************************************************************************************************
 */
-
+/*等待/请求  事件标志组*/
 OS_FLAGS  OSFlagPend (OS_FLAG_GRP  *pgrp,
                       OS_FLAGS      flags,
                       INT8U         wait_type,
@@ -819,6 +822,7 @@ OS_FLAGS  OSFlagPendGetFlagsRdy (void)
 *                 the event flag group.
 *********************************************************************************************************
 */
+/*发出/提交  事件标志组*/
 OS_FLAGS  OSFlagPost (OS_FLAG_GRP  *pgrp,
                       OS_FLAGS      flags,
                       INT8U         opt,
@@ -948,7 +952,7 @@ OS_FLAGS  OSFlagPost (OS_FLAG_GRP  *pgrp,
 * Called From: Task or ISR
 *********************************************************************************************************
 */
-
+/*查询事件标志组的信息*/
 #if OS_FLAG_QUERY_EN > 0u
 OS_FLAGS  OSFlagQuery (OS_FLAG_GRP  *pgrp,
                        INT8U        *perr)
@@ -1021,17 +1025,15 @@ OS_FLAGS  OSFlagQuery (OS_FLAG_GRP  *pgrp,
 * Note(s)    : This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-
-static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,
-                            OS_FLAG_NODE *pnode,
-                            OS_FLAGS      flags,
-                            INT8U         wait_type,
-                            INT32U        timeout)
+/*事件标志组阻塞函数*/
+static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,		/*事件标志组指针*/
+                            OS_FLAG_NODE *pnode,	/*事件标志节点指针地址*/
+                            OS_FLAGS      flags,	/*事件标志，是位掩码，只是检查哪个位*/
+                            INT8U         wait_type,/*等待类型*/
+                            INT32U        timeout)	/*超时时间*/
 {
     OS_FLAG_NODE  *pnode_next;
     INT8U          y;
-
-
     OSTCBCur->OSTCBStat      |= OS_STAT_FLAG;
     OSTCBCur->OSTCBStatPend   = OS_STAT_PEND_OK;
     OSTCBCur->OSTCBDly        = timeout;              /* Store timeout in task's TCB                   */
@@ -1045,19 +1047,20 @@ static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,
     pnode->OSFlagNodePrev     = (void *)0;
     pnode->OSFlagNodeFlagGrp  = (void *)pgrp;         /* Link to Event Flag Group                      */
     pnode_next                = (OS_FLAG_NODE *)pgrp->OSFlagWaitList;
-    if (pnode_next != (void *)0) {                    /* Is this the first NODE to insert?             */
+    if (pnode_next != (void *)0)                      /* Is this the first NODE to insert?             */
+	{
         pnode_next->OSFlagNodePrev = pnode;           /* No, link in doubly linked list                */
     }
     pgrp->OSFlagWaitList = (void *)pnode;
 
     y            =  OSTCBCur->OSTCBY;                 /* Suspend current task until flag(s) received   */
     OSRdyTbl[y] &= (OS_PRIO)~OSTCBCur->OSTCBBitX;
-    if (OSRdyTbl[y] == 0x00u) {
+    if (OSRdyTbl[y] == 0x00u)
+	{
         OSRdyGrp &= (OS_PRIO)~OSTCBCur->OSTCBBitY;
     }
 }
-
-/*$PAGE*/
+/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                    INITIALIZE THE EVENT FLAG MODULE
@@ -1072,47 +1075,46 @@ static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,
 * WARNING    : You MUST NOT call this function from your code.  This is an INTERNAL function to uC/OS-II.
 *********************************************************************************************************
 */
-
+/*事件标志组初始化*/
 void  OS_FlagInit (void)
 {
-#if OS_MAX_FLAGS == 1u
-    OSFlagFreeList                 = (OS_FLAG_GRP *)&OSFlagTbl[0];  /* Only ONE event flag group!      */
-    OSFlagFreeList->OSFlagType     = OS_EVENT_TYPE_UNUSED;
-    OSFlagFreeList->OSFlagWaitList = (void *)0;
+#if OS_MAX_FLAGS == 1u													/*如果只有一个事件标志组*/
+    OSFlagFreeList                 = (OS_FLAG_GRP *)&OSFlagTbl[0];		/*指向空闲链表的表头*/
+    OSFlagFreeList->OSFlagType     = OS_EVENT_TYPE_UNUSED;				/*事件标志类型设成未使用*/
+    OSFlagFreeList->OSFlagWaitList = (void *)0;							/*OSFlagFreeList应该指向下一个事件标志组，因为只有一个，所以OSFlagFreeList设为空*/
     OSFlagFreeList->OSFlagFlags    = (OS_FLAGS)0;
 #if OS_FLAG_NAME_EN > 0u
     OSFlagFreeList->OSFlagName     = (INT8U *)"?";
 #endif
 #endif
 
-#if OS_MAX_FLAGS >= 2u
+#if OS_MAX_FLAGS >= 2u										/*如果事件标志组数量大于1*/
     INT16U        ix;
     INT16U        ix_next;
     OS_FLAG_GRP  *pgrp1;
     OS_FLAG_GRP  *pgrp2;
 
-
-    OS_MemClr((INT8U *)&OSFlagTbl[0], sizeof(OSFlagTbl));           /* Clear the flag group table      */
-    for (ix = 0u; ix < (OS_MAX_FLAGS - 1u); ix++) {                 /* Init. list of free EVENT FLAGS  */
+    OS_MemClr((INT8U *)&OSFlagTbl[0], sizeof(OSFlagTbl));	/*清空所有事件标志组*/
+    for (ix = 0u; ix < (OS_MAX_FLAGS - 1u); ix++)			/*把事件标志组连起来，组成空闲链表*/
+	{
         ix_next = ix + 1u;
         pgrp1 = &OSFlagTbl[ix];
         pgrp2 = &OSFlagTbl[ix_next];
         pgrp1->OSFlagType     = OS_EVENT_TYPE_UNUSED;
         pgrp1->OSFlagWaitList = (void *)pgrp2;
 #if OS_FLAG_NAME_EN > 0u
-        pgrp1->OSFlagName     = (INT8U *)(void *)"?";               /* Unknown name                    */
+        pgrp1->OSFlagName     = (INT8U *)(void *)"?";
 #endif
     }
-    pgrp1                 = &OSFlagTbl[ix];
+    pgrp1                 = &OSFlagTbl[ix];					/*处理最后一项*/
     pgrp1->OSFlagType     = OS_EVENT_TYPE_UNUSED;
     pgrp1->OSFlagWaitList = (void *)0;
 #if OS_FLAG_NAME_EN > 0u
-    pgrp1->OSFlagName     = (INT8U *)(void *)"?";                   /* Unknown name                    */
+    pgrp1->OSFlagName     = (INT8U *)(void *)"?";
 #endif
-    OSFlagFreeList        = &OSFlagTbl[0];
+    OSFlagFreeList        = &OSFlagTbl[0];					/*OSFlagFreeList指向空闲表头*/
 #endif
 }
-
 /*$PAGE*/
 /*
 *********************************************************************************************************
@@ -1136,7 +1138,7 @@ void  OS_FlagInit (void)
 *              2) This function is INTERNAL to uC/OS-II and your application should not call it.
 *********************************************************************************************************
 */
-
+/*标志节点任务就绪*/
 static  BOOLEAN  OS_FlagTaskRdy (OS_FLAG_NODE *pnode,
                                  OS_FLAGS      flags_rdy)
 {

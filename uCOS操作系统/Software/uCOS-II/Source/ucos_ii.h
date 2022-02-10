@@ -133,7 +133,7 @@ extern "C" {
 #define  OS_EVENT_TYPE_Q                2u/*消息队列*/
 #define  OS_EVENT_TYPE_SEM              3u/*信号量*/
 #define  OS_EVENT_TYPE_MUTEX            4u/*互斥信号量*/
-#define  OS_EVENT_TYPE_FLAG             5u/*事件标志组*/
+#define  OS_EVENT_TYPE_FLAG             5u/*事件标志组被使用*/
 
 #define  OS_TMR_TYPE                  100u  /* Used to identify Timers ...                             */
                                             /* ... (Must be different value than OS_EVENT_TYPE_xxx)    */
@@ -389,29 +389,32 @@ typedef  INT16U   OS_FLAGS;
 typedef  INT32U   OS_FLAGS;
 #endif
 
-
-typedef struct os_flag_grp {                /* Event Flag Group                                        */
-    INT8U         OSFlagType;               /* Should be set to OS_EVENT_TYPE_FLAG                     */
-    void         *OSFlagWaitList;           /* Pointer to first NODE of task waiting on event flag     */
-    OS_FLAGS      OSFlagFlags;              /* 8, 16 or 32 bit flags                                   */
+/*事件标志组*/
+typedef struct os_flag_grp
+{
+    INT8U         OSFlagType;               /*事件标志类型，						表示该事件标志组是否被使用*/
+    void         *OSFlagWaitList;           /*指向第一个任务等待事件标志节点，		未使用则指向链表的下一个事件标志组，使用了就指向事件标志节点链表的首地址*/
+    OS_FLAGS      OSFlagFlags;              /*事件标志								事件标志，每一个比特代表一个事件*/
 #if OS_FLAG_NAME_EN > 0u
-    INT8U        *OSFlagName;
+    INT8U        *OSFlagName;				/*事件标志名称							给事件标志组起名字*/
 #endif
 } OS_FLAG_GRP;
 
 
-
-typedef struct os_flag_node {               /* Event Flag Wait List Node                               */
-    void         *OSFlagNodeNext;           /* Pointer to next     NODE in wait list                   */
-    void         *OSFlagNodePrev;           /* Pointer to previous NODE in wait list                   */
-    void         *OSFlagNodeTCB;            /* Pointer to TCB of waiting task                          */
-    void         *OSFlagNodeFlagGrp;        /* Pointer to Event Flag Group                             */
-    OS_FLAGS      OSFlagNodeFlags;          /* Event flag to wait on                                   */
-    INT8U         OSFlagNodeWaitType;       /* Type of wait:                                           */
-                                            /*      OS_FLAG_WAIT_AND                                   */
-                                            /*      OS_FLAG_WAIT_ALL                                   */
-                                            /*      OS_FLAG_WAIT_OR                                    */
-                                            /*      OS_FLAG_WAIT_ANY                                   */
+/*事件标志节点*/
+typedef struct os_flag_node
+{
+    void         *OSFlagNodeNext;           /*指向下一个节点*/
+    void         *OSFlagNodePrev;           /*指向前一个节点*/
+    void         *OSFlagNodeTCB;            /*指向等待任务的TCB*/
+    void         *OSFlagNodeFlagGrp;        /*指向事件标志组*/
+    OS_FLAGS      OSFlagNodeFlags;          /*事件标志节点标志*/
+    INT8U         OSFlagNodeWaitType;       /*等待类型,可以有如下几个值
+											  与关系   OS_FLAG_WAIT_CLR_ANY		几个事件全部发生结束等待
+											  全部发生 OS_FLAG_WAIT_CLR_ALL		全部事件发生结束等待
+											  或关系   OS_FLAG_WAIT_CLR_OR		某几个事件之一发生结束等待
+											  任何一个 OS_FLAG_WAIT_CLR_ANY		任何一个事件发生结束等待
+	*/   
 } OS_FLAG_NODE;
 #endif
 
@@ -648,8 +651,8 @@ OS_EXT  OS_EVENT          OSEventTbl[OS_MAX_EVENTS];/*事件控制块的实体*//* Table
 #endif
 
 #if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)
-OS_EXT  OS_FLAG_GRP       OSFlagTbl[OS_MAX_FLAGS];  /* Table containing event flag groups              */
-OS_EXT  OS_FLAG_GRP      *OSFlagFreeList;           /* Pointer to free list of event flag groups       */
+OS_EXT  OS_FLAG_GRP       OSFlagTbl[OS_MAX_FLAGS];  /*事件标志组实体，没有被使用的组成空闲链表*/
+OS_EXT  OS_FLAG_GRP      *OSFlagFreeList;           /*事件标志组空闲链表指针*/
 #endif
 
 #if OS_TASK_STAT_EN > 0u
@@ -775,7 +778,7 @@ OS_FLAGS      OSFlagAccept            (OS_FLAG_GRP     *pgrp,
                                        INT8U           *perr);
 #endif
 
-OS_FLAG_GRP  *OSFlagCreate            (OS_FLAGS         flags,
+OS_FLAG_GRP  *OSFlagCreate            (OS_FLAGS         flags,		/*创建事件标志组*/
                                        INT8U           *perr);
 
 #if OS_FLAG_DEL_EN > 0u
@@ -1233,7 +1236,7 @@ void          OS_EventWaitListInit    (OS_EVENT        *pevent);
 #endif
 
 #if (OS_FLAG_EN > 0u) && (OS_MAX_FLAGS > 0u)
-void          OS_FlagInit             (void);
+void          OS_FlagInit             (void);							/*事件标志组初始化*/
 void          OS_FlagUnlink           (OS_FLAG_NODE    *pnode);
 #endif
 

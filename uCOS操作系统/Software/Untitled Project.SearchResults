@@ -1,1 +1,7 @@
----- printf Matches (0 in 0 files) ----
+---- OS_FlagBlock Matches (6 in 1 files) ----
+Os_flag.c (ucos-ii\source):static  void     OS_FlagBlock(OS_FLAG_GRP *pgrp, OS_FLAG_NODE *pnode, OS_FLAGS flags, INT8U wait_type, INT32U timeout);
+Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
+Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
+Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
+Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
+Os_flag.c (ucos-ii\source):static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,
