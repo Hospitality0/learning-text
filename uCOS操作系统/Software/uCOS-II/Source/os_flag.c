@@ -1034,26 +1034,26 @@ static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,		/*事件标志组指针*/
 {
     OS_FLAG_NODE  *pnode_next;
     INT8U          y;
-    OSTCBCur->OSTCBStat      |= OS_STAT_FLAG;
-    OSTCBCur->OSTCBStatPend   = OS_STAT_PEND_OK;
-    OSTCBCur->OSTCBDly        = timeout;              /* Store timeout in task's TCB                   */
+    OSTCBCur->OSTCBStat      |= OS_STAT_FLAG;		  /*TCB中设置成事件标志组等待标志*/
+    OSTCBCur->OSTCBStatPend   = OS_STAT_PEND_OK;	  /*初始化事件等待状态*/
+    OSTCBCur->OSTCBDly        = timeout;              /*设置超时事件*/
 #if OS_TASK_DEL_EN > 0u
-    OSTCBCur->OSTCBFlagNode   = pnode;                /* TCB to link to node                           */
+    OSTCBCur->OSTCBFlagNode   = pnode;                /*TCB中指针指向事件标志节点*/
 #endif
-    pnode->OSFlagNodeFlags    = flags;                /* Save the flags that we need to wait for       */
-    pnode->OSFlagNodeWaitType = wait_type;            /* Save the type of wait we are doing            */
-    pnode->OSFlagNodeTCB      = (void *)OSTCBCur;     /* Link to task's TCB                            */
-    pnode->OSFlagNodeNext     = pgrp->OSFlagWaitList; /* Add node at beginning of event flag wait list */
-    pnode->OSFlagNodePrev     = (void *)0;
-    pnode->OSFlagNodeFlagGrp  = (void *)pgrp;         /* Link to Event Flag Group                      */
-    pnode_next                = (OS_FLAG_NODE *)pgrp->OSFlagWaitList;
-    if (pnode_next != (void *)0)                      /* Is this the first NODE to insert?             */
+    pnode->OSFlagNodeFlags    = flags;                /*在节点中保存事件标志*/
+    pnode->OSFlagNodeWaitType = wait_type;            /*设置等待类型*/
+    pnode->OSFlagNodeTCB      = (void *)OSTCBCur;     /*节点中保存TCB地址*/
+    pnode->OSFlagNodeNext     = pgrp->OSFlagWaitList; /*事件标志组链表头部增加节点*/
+    pnode->OSFlagNodePrev     = (void *)0;			  /*指向下一个节点的指针清空*/
+    pnode->OSFlagNodeFlagGrp  = (void *)pgrp;         /*节点中的指针指向事件标志组*/
+    pnode_next                = (OS_FLAG_NODE *)pgrp->OSFlagWaitList;		/*pnode_next赋值*/
+    if (pnode_next != (void *)0)                      /*如果不仅仅只有一个节点*/
 	{
-        pnode_next->OSFlagNodePrev = pnode;           /* No, link in doubly linked list                */
+        pnode_next->OSFlagNodePrev = pnode;           /*原来的表头变成第二个节点*/
     }
-    pgrp->OSFlagWaitList = (void *)pnode;
+    pgrp->OSFlagWaitList = (void *)pnode;			  /*OSFlagWaitList指向新的表头*/
 
-    y            =  OSTCBCur->OSTCBY;                 /* Suspend current task until flag(s) received   */
+    y            =  OSTCBCur->OSTCBY;                 /*操作就绪组+表，让任务阻塞*/
     OSRdyTbl[y] &= (OS_PRIO)~OSTCBCur->OSTCBBitX;
     if (OSRdyTbl[y] == 0x00u)
 	{

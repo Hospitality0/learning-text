@@ -1,7 +1,34 @@
----- OS_FlagBlock Matches (6 in 1 files) ----
-Os_flag.c (ucos-ii\source):static  void     OS_FlagBlock(OS_FLAG_GRP *pgrp, OS_FLAG_NODE *pnode, OS_FLAGS flags, INT8U wait_type, INT32U timeout);
-Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
-Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
-Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
-Os_flag.c (ucos-ii\source):                 OS_FlagBlock(pgrp, &node, flags, wait_type, timeout);
-Os_flag.c (ucos-ii\source):static  void  OS_FlagBlock (OS_FLAG_GRP  *pgrp,
+---- OS_FLAG_NODE Matches (34 in 5 files) ----
+Os_core.c (ucos-ii\source):        ptcb->OSTCBFlagNode  = (OS_FLAG_NODE *)0;          /* Task is not pending on an event flag     */
+Os_dbg_r.c (ucos-ii\source):INT16U  const  OSFlagNodeSize      = sizeof(OS_FLAG_NODE);      /* Size in Bytes of OS_FLAG_NODE       */
+Os_flag.c (ucos-ii\source):static  void     OS_FlagBlock(OS_FLAG_GRP *pgrp, OS_FLAG_NODE *pnode, OS_FLAGS flags, INT8U wait_type, INT32U timeout);/*事件标志组阻塞函数*/
+Os_flag.c (ucos-ii\source):static  BOOLEAN  OS_FlagTaskRdy(OS_FLAG_NODE *pnode, OS_FLAGS flags_rdy);		/*标志节点任务就绪*/
+Os_flag.c (ucos-ii\source):    OS_FLAG_NODE *pnode;
+Os_flag.c (ucos-ii\source):             pnode = (OS_FLAG_NODE *)pgrp->OSFlagWaitList;
+Os_flag.c (ucos-ii\source):             while (pnode != (OS_FLAG_NODE *)0) {          /* Ready ALL tasks waiting for flags        */
+Os_flag.c (ucos-ii\source):                 pnode = (OS_FLAG_NODE *)pnode->OSFlagNodeNext;
+Os_flag.c (ucos-ii\source):    OS_FLAG_NODE  node;
+Os_flag.c (ucos-ii\source):    OS_FLAG_NODE *pnode;
+Os_flag.c (ucos-ii\source):    pnode = (OS_FLAG_NODE *)pgrp->OSFlagWaitList;
+Os_flag.c (ucos-ii\source):    while (pnode != (OS_FLAG_NODE *)0) {             /* Go through all tasks waiting on event flag(s)  */
+Os_flag.c (ucos-ii\source):        pnode = (OS_FLAG_NODE *)pnode->OSFlagNodeNext; /* Point to next task waiting for event flag(s) */
+Os_flag.c (ucos-ii\source):                            OS_FLAG_NODE *pnode,	/*事件标志节点指针地址*/
+Os_flag.c (ucos-ii\source):    OS_FLAG_NODE  *pnode_next;
+Os_flag.c (ucos-ii\source):    pnode_next                = (OS_FLAG_NODE *)pgrp->OSFlagWaitList;		/*pnode_next赋值*/
+Os_flag.c (ucos-ii\source):static  BOOLEAN  OS_FlagTaskRdy (OS_FLAG_NODE *pnode,
+Os_flag.c (ucos-ii\source):void  OS_FlagUnlink (OS_FLAG_NODE *pnode)
+Os_flag.c (ucos-ii\source):    OS_FLAG_NODE *pnode_prev;
+Os_flag.c (ucos-ii\source):    OS_FLAG_NODE *pnode_next;
+Os_flag.c (ucos-ii\source):    pnode_prev = (OS_FLAG_NODE *)pnode->OSFlagNodePrev;
+Os_flag.c (ucos-ii\source):    pnode_next = (OS_FLAG_NODE *)pnode->OSFlagNodeNext;
+Os_flag.c (ucos-ii\source):    if (pnode_prev == (OS_FLAG_NODE *)0) {                      /* Is it first node in wait list?      */
+Os_flag.c (ucos-ii\source):        if (pnode_next != (OS_FLAG_NODE *)0) {
+Os_flag.c (ucos-ii\source):            pnode_next->OSFlagNodePrev = (OS_FLAG_NODE *)0;     /*      Link new 1st node PREV to NULL */
+Os_flag.c (ucos-ii\source):        if (pnode_next != (OS_FLAG_NODE *)0) {                  /*      Was this the LAST node?        */
+Os_flag.c (ucos-ii\source):    ptcb->OSTCBFlagNode = (OS_FLAG_NODE *)0;
+Os_task.c (ucos-ii\source):    OS_FLAG_NODE *pnode;
+Os_task.c (ucos-ii\source):    if (pnode != (OS_FLAG_NODE *)0)  					/*如果事件再等待事件标志*/
+Ucos_ii.h (ucos-ii\source):typedef struct os_flag_node
+Ucos_ii.h (ucos-ii\source):} OS_FLAG_NODE;
+Ucos_ii.h (ucos-ii\source):    OS_FLAG_NODE    *OSTCBFlagNode;         /*事件标志节点*/
+Ucos_ii.h (ucos-ii\source):void          OS_FlagUnlink           (OS_FLAG_NODE    *pnode);
