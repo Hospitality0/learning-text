@@ -84,43 +84,46 @@ void  *OSMboxAccept (OS_EVENT *pevent)
 *              == (OS_EVENT *)0  if no event control blocks were available
 *********************************************************************************************************
 */
-/*创建一个邮箱*/
+/*创建一个邮箱，把一个ECB分给该邮箱*/
 OS_EVENT  *OSMboxCreate (void *pmsg)
 {
     OS_EVENT  *pevent;
-#if OS_CRITICAL_METHOD == 3u                     /* Allocate storage for CPU status register           */
+#if OS_CRITICAL_METHOD == 3u
     OS_CPU_SR  cpu_sr = 0u;
 #endif
 
 
 
 #ifdef OS_SAFETY_CRITICAL_IEC61508
-    if (OSSafetyCriticalStartFlag == OS_TRUE) {
+    if (OSSafetyCriticalStartFlag == OS_TRUE)
+	{
         OS_SAFETY_CRITICAL_EXCEPTION();
     }
 #endif
 
-    if (OSIntNesting > 0u) {                     /* See if called from ISR ...                         */
-        return ((OS_EVENT *)0);                  /* ... can't CREATE from an ISR                       */
+    if (OSIntNesting > 0u)
+	{
+        return ((OS_EVENT *)0);
     }
     OS_ENTER_CRITICAL();
-    pevent = OSEventFreeList;                    /* Get next free event control block                  */
-    if (OSEventFreeList != (OS_EVENT *)0) {      /* See if pool of free ECB pool was empty             */
-        OSEventFreeList = (OS_EVENT *)OSEventFreeList->OSEventPtr;
+    pevent = OSEventFreeList;							/*pevent指向空闲链表的表头*/
+    if (OSEventFreeList != (OS_EVENT *)0)
+	{
+        OSEventFreeList = (OS_EVENT *)OSEventFreeList->OSEventPtr;		/*空闲指针指向下一个ECB*/
     }
     OS_EXIT_CRITICAL();
-    if (pevent != (OS_EVENT *)0) {
-        pevent->OSEventType    = OS_EVENT_TYPE_MBOX;
+    if (pevent != (OS_EVENT *)0)
+	{
+        pevent->OSEventType    = OS_EVENT_TYPE_MBOX;	/*配置ECB*/
         pevent->OSEventCnt     = 0u;
-        pevent->OSEventPtr     = pmsg;           /* Deposit message in event control block             */
+        pevent->OSEventPtr     = pmsg;
 #if OS_EVENT_NAME_EN > 0u
         pevent->OSEventName    = (INT8U *)(void *)"?";
 #endif
         OS_EventWaitListInit(pevent);
     }
-    return (pevent);                             /* Return pointer to event control block              */
+    return (pevent);
 }
-/*$PAGE*/
 /*
 *********************************************************************************************************
 *                                         DELETE A MAIBOX

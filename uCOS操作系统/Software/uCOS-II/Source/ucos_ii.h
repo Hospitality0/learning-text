@@ -247,7 +247,7 @@ extern "C" {
 #define OS_ERR_NONE                     0u
 
 #define OS_ERR_EVENT_TYPE               1u
-#define OS_ERR_PEND_ISR                 2u
+#define OS_ERR_PEND_ISR                 2u/*中断中调用本函数*/
 #define OS_ERR_POST_NULL_PTR            3u
 #define OS_ERR_PEVENT_NULL              4u
 #define OS_ERR_POST_ISR                 5u
@@ -797,7 +797,7 @@ void          OSFlagNameSet           (OS_FLAG_GRP     *pgrp,
                                        INT8U           *perr);
 #endif
 
-OS_FLAGS      OSFlagPend              (OS_FLAG_GRP     *pgrp,
+OS_FLAGS      OSFlagPend              (OS_FLAG_GRP     *pgrp,			/*等待/请求  事件标志组*/
                                        OS_FLAGS         flags,
                                        INT8U            wait_type,
                                        INT32U           timeout,
@@ -827,7 +827,7 @@ OS_FLAGS      OSFlagQuery             (OS_FLAG_GRP     *pgrp,
 void         *OSMboxAccept            (OS_EVENT        *pevent);
 #endif
 
-OS_EVENT     *OSMboxCreate            (void            *pmsg);
+OS_EVENT     *OSMboxCreate            (void            *pmsg);/*创建一个邮箱*/
 
 #if OS_MBOX_DEL_EN > 0u
 OS_EVENT     *OSMboxDel               (OS_EVENT        *pevent,
