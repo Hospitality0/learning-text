@@ -163,7 +163,7 @@ OS_EVENT  *OSSemCreate (INT16U cnt)
 *                 will no longer be guarded by the semaphore.
 *********************************************************************************************************
 */
-/*删除一个信号量*/
+/*删除一个信号量/消息*/
 #if OS_SEM_DEL_EN > 0u
 OS_EVENT  *OSSemDel (OS_EVENT  *pevent,						/*ECB地址*/
                      INT8U      opt,						/*删除选项*/

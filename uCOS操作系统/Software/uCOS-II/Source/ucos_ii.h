@@ -424,12 +424,13 @@ typedef struct os_flag_node
 *                                          MESSAGE MAILBOX DATA
 *********************************************************************************************************
 */
-
+/*复制消息邮箱的结构体*/
 #if OS_MBOX_EN > 0u
-typedef struct os_mbox_data {
-    void   *OSMsg;                         /* Pointer to message in mailbox                            */
-    OS_PRIO OSEventTbl[OS_EVENT_TBL_SIZE]; /* List of tasks waiting for event to occur                 */
-    OS_PRIO OSEventGrp;                    /* Group corresponding to tasks waiting for event to occur  */
+typedef struct os_mbox_dat
+{
+    void   *OSMsg;                         /*消息地址*/
+    OS_PRIO OSEventTbl[OS_EVENT_TBL_SIZE]; /*等待任务表*/
+    OS_PRIO OSEventGrp;                    /*等待任务组*/
 } OS_MBOX_DATA;
 #endif
 
@@ -824,29 +825,29 @@ OS_FLAGS      OSFlagQuery             (OS_FLAG_GRP     *pgrp,
 #if OS_MBOX_EN > 0u
 
 #if OS_MBOX_ACCEPT_EN > 0u
-void         *OSMboxAccept            (OS_EVENT        *pevent);
+void         *OSMboxAccept            (OS_EVENT        *pevent);	/*不等待一个邮箱*/
 #endif
 
-OS_EVENT     *OSMboxCreate            (void            *pmsg);/*创建一个邮箱*/
+OS_EVENT     *OSMboxCreate            (void            *pmsg);	/*创建一个邮箱*/
 
 #if OS_MBOX_DEL_EN > 0u
-OS_EVENT     *OSMboxDel               (OS_EVENT        *pevent,
+OS_EVENT     *OSMboxDel               (OS_EVENT        *pevent,	/*删除一个邮箱*/
                                        INT8U            opt,
                                        INT8U           *perr);
 #endif
 
-void         *OSMboxPend              (OS_EVENT        *pevent,
+void         *OSMboxPend              (OS_EVENT        *pevent,	/*等待或请求一个邮件*/
                                        INT32U           timeout,
                                        INT8U           *perr);
 
 #if OS_MBOX_PEND_ABORT_EN > 0u
-INT8U         OSMboxPendAbort         (OS_EVENT        *pevent,
+INT8U         OSMboxPendAbort         (OS_EVENT        *pevent,	/*放弃等待邮件*/
                                        INT8U            opt,
                                        INT8U           *perr);
 #endif
 
 #if OS_MBOX_POST_EN > 0u
-INT8U         OSMboxPost              (OS_EVENT        *pevent,
+INT8U         OSMboxPost              (OS_EVENT        *pevent,	/*发出邮箱*/
                                        void            *pmsg);
 #endif
 
@@ -857,7 +858,7 @@ INT8U         OSMboxPostOpt           (OS_EVENT        *pevent,
 #endif
 
 #if OS_MBOX_QUERY_EN > 0u
-INT8U         OSMboxQuery             (OS_EVENT        *pevent,
+INT8U         OSMboxQuery             (OS_EVENT        *pevent,	/*查询邮箱信息*/
                                        OS_MBOX_DATA    *p_mbox_data);
 #endif
 #endif
@@ -1006,7 +1007,7 @@ INT16U        OSSemAccept             (OS_EVENT        *pevent);
 OS_EVENT     *OSSemCreate             (INT16U           cnt);
 
 #if OS_SEM_DEL_EN > 0u
-OS_EVENT     *OSSemDel                (OS_EVENT        *pevent,
+OS_EVENT     *OSSemDel                (OS_EVENT        *pevent,	/*删除一个信号量/消息*/
                                        INT8U            opt,
                                        INT8U           *perr);
 #endif
