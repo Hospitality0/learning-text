@@ -325,6 +325,82 @@ void TaskPrint(void *pParam)
 
 
 
+ /*消息邮箱实验*/
+OS_EVENT *myMBox;
+ void TaskMessageSen(void *pParam)
+ {
+ 	INT8U *perr;
+	INT8U err,i;
+	INT32U j;
+	INT32U scount;
+	perr = &err;
+	err = OS_ERR_NONE;
+	scount = 0;
+	myMBox = OSMboxCreate(&scount);
+	if(myMBox == (OS_EVENT *)0)		/*创建失败*/
+	{
+		printf("创建邮箱失败");
+		OSTaskDel(OS_PRIO_SELF);
+		return;
+	}
+	printf("创建成功");
+	while(1)
+	{
+	}
+ }
+
+ void TaskMessageRec(void *pParam)
+ {
+ }
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 
 
