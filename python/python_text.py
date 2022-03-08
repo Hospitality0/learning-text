@@ -1,7 +1,7 @@
-str1 = {'color':'red','points':'1'}
-str2 = {'color':'blue','points':'2'}
-str3 = {'color':'green','points':'3'}
-str4 = {'color':'black','points':'4'}
-sum = [str1,str2,str3,str4]
-for a in sum:
-    print(a)    
+dir = {
+    'rua':'云顶之弈',
+    'meng':['九猩红','6海克斯','执事德莱文','毒斗罗'],
+    'bumeng':['拼多多老鼠','爆杀流卡特','9破败','5变异战士','丧失大眼儿']
+      }
+for a in dir['meng']:
+    print(a)
