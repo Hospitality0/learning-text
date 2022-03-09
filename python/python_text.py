@@ -1,10 +1,10 @@
-def rua():
-    print('开挼')
+def rua(tmp):
+    for a in tmp:
+        print(a)
+
+str = ['']
 
 
-print('-------------------')
-rua()
-print('-------------------')
 
 
 
