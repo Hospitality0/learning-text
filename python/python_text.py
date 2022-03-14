@@ -17,17 +17,34 @@ class Car:
             print('里程表不能调哦')
     def increment_odometer(self,e):
         self.odometer_reading = self.odometer_reading + e
+    def fill_gas_tank(self):
+        print('超大500块钱油箱')
+
+
+class Battery:
+    def __init__(self,f):
+        self.battery_size = f
+    def describe_battery(self):
+        print(f'电池大小：{self.battery_size}')
+
+
+
+
+
 
 class ElectricCar(Car):
     def __init__(self,a,b,c):
-        super().__init__(a,b,c)
         print('----------子类构造函数-----------')
+        super().__init__(a,b,c)
+        self.E_battery = Battery(75)
+    def fill_gas_tank(self):
+        print('电动车莫得油箱')
+
+
 
 my_BYD = ElectricCar('比亚迪','汉EV',2022)
-print(my_BYD.make,my_BYD.model,my_BYD.year)
-
-
-
+print(my_BYD.get_descriptive())
+my_BYD.E_battery.describe_battery()
 
 
 
