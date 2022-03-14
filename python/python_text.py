@@ -1,3 +1,47 @@
+file_name = 'C:\\Users\\kewei.song\\Desktop\\learning-text\\python\\text_files\\text.txt'
+with open(file_name) as tmp:
+    str = tmp.readlines()
+for line in str:
+    print(line.rstrip())
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''
 class Car:
     def __init__(self,a,b,c):
         self.make = a
@@ -45,7 +89,7 @@ class ElectricCar(Car):
 my_BYD = ElectricCar('比亚迪','汉EV',2022)
 print(my_BYD.get_descriptive())
 my_BYD.E_battery.describe_battery()
-
+'''
 
 
 
