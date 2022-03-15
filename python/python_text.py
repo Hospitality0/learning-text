@@ -1,8 +1,16 @@
-file_name = 'C:\\Users\\kewei.song\\Desktop\\learning-text\\python\\text_files\\text.txt'
-with open(file_name) as tmp:
-    str = tmp.readlines()
-for line in str:
-    print(line.rstrip())
+'''import json
+numbers = [1,2,3,4,5,6,7]
+file_name = 'number.json'
+with open(file_name,'w') as f:
+    json.dump(numbers,f)
+print(numbers)'''
+
+
+import json
+file_name = 'number.json'
+with open(file_name) as f:
+    numbers = json.load(f)
+print(numbers)
 
 
 
@@ -22,25 +30,28 @@ for line in str:
 
 
 
+'''file_name = 'C:\\Users\\windows\\Desktop\\learning-text\\python\\text_files'
+with open(file_name + '\\rua.txt','a') as tmp:
+    tmp.write("i wanna a girl\n")
+    tmp.write("i wanna a girl who slap me\n")
+
+a = 'i wanna a girl who slap me'
+while 1:
+    f = input("\n被除数：")
+    if f == 'q':
+        break
+    s = input("\n除数：")
+    if s == 'q':
+        break
+    try:
+        q = int(f)/int(s)
+    except ZeroDivisionError:
+        pass #print('0不中啊，老弟')
+    else:
+        print(q)
 
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+'''
 '''
 class Car:
     def __init__(self,a,b,c):
