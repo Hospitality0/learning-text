@@ -1,19 +1,10 @@
-'''import json
-numbers = [1,2,3,4,5,6,7]
-file_name = 'number.json'
-with open(file_name,'w') as f:
-    json.dump(numbers,f)
-print(numbers)'''
-
-
-import json
-file_name = 'number.json'
-with open(file_name) as f:
-    numbers = json.load(f)
-print(numbers)
-
-
-
+from fun import get_name
+print('按q可以在任何时候退出')
+while 1:
+    X = input('\n输入姓')
+    M = input('\n输入名')
+    quan_ming = get_name(X,M)
+    print(quan_ming)
 
 
 
