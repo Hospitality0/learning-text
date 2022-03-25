@@ -1,26 +1,36 @@
-from fun import get_name
+import os
+files = os.listdir('C:\\Users\\kewei.song\\Desktop\\git\\learning-text\\python\\text_files')
+os.chdir('C:\\Users\\kewei.song\\Desktop\\git\\learning-text\\python\\text_files')
+os.system('dir')
+#print(files)
+for filename in files:
+    portion = os.path.splitext(filename)
+    newname = portion[0] + ".c"
+    #os.rename(filename,newname)
+    print(newname)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+'''from fun import get_name
 print('按q可以在任何时候退出')
 while 1:
     X = input('\n输入姓')
     M = input('\n输入名')
     quan_ming = get_name(X,M)
-    print(quan_ming)
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+    print(quan_ming)'''
 '''file_name = 'C:\\Users\\windows\\Desktop\\learning-text\\python\\text_files'
 with open(file_name + '\\rua.txt','a') as tmp:
     tmp.write("i wanna a girl\n")
